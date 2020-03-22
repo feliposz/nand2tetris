@@ -99,3 +99,65 @@ CHIP Xor {
 }
 ```
 
+# Multiplexor (Mux)
+
+Truth table:
+
+| a | b | sel | out | 1-components
+|---|---|-----|-----|----------------
+| 0 | 0 |  0  |  0  |
+| 0 | 1 |  0  |  0  |
+| 1 | 0 |  0  |  1  | a & !b & !sel
+| 1 | 1 |  0  |  1  | a & b & !sel
+| 0 | 0 |  1  |  0  |
+| 0 | 1 |  1  |  1  | !a & b & sel
+| 1 | 0 |  1  |  0  |
+| 1 | 1 |  1  |  1  | a & b & sel
+
+Simplification:
+
+```
+(!a & b & sel) | (a & b & sel) | (a & !b & !sel) | (a & b & !sel) =
+(((!a & b) | (a & b)) & sel) | (((a & !b) | (a & b)) & !sel) =
+(((!a | a) & b)) & sel) | ((a & (!b | b)) & !sel) =
+(b & sel) | (a & !sel)
+```
+
+# Demultiplexer (Demux)
+
+| in | sel | a | b |
+|----|-----|---|---|
+| 0  |  0  | 0 | 0 |
+| 0  |  1  | 0 | 0 |
+| 1  |  0  | 1 | 0 |
+| 1  |  1  | 0 | 1 |
+
+```
+a = in & !sel
+b = in & sel
+```
+
+# Project 1
+
+Suggested order:
+
+Elementary:
+- Not
+- And
+- Or
+- Xor
+- Mux
+- DMux
+
+16-bit:
+- Not16
+- And16
+- Or16
+- Mux16
+
+Multi-way:
+- Or8Way
+- Mux4Way16
+- Mux8Way16
+- DMux4Way
+- DMux8Way
