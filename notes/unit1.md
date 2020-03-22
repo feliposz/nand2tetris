@@ -142,22 +142,22 @@ b = in & sel
 Suggested order:
 
 Elementary:
-- Not
-- And
-- Or
-- Xor
-- Mux
-- DMux
+- Not ✓
+- And ✓
+- Or ✓
+- Xor ✓
+- Mux ✓
+- DMux ✓
 
 16-bit:
-- Not16
-- And16
-- Or16
-- Mux16
+- Not16 ✓
+- And16 ✓
+- Or16 ✓
+- Mux16 ✓
 
 Multi-way:
-- Or8Way
-- Mux4Way16
-- Mux8Way16
-- DMux4Way
-- DMux8Way
+- Or8Way ✓
+- Mux4Way16 ✓
+- Mux8Way16 ✓
+- DMux4Way ✓
+- DMux8Way ✓
