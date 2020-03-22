@@ -1,2 +1,3 @@
 *.zip
 /book
+/tools/bin/*.dat
