@@ -1,4 +1,6 @@
-# Binary addition
+# Unit 2
+
+## Binary addition
 
 - Carry bit
 - Overflow

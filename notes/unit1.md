@@ -1,8 +1,10 @@
-# Teachers
+# Unit 1
+
+## Teachers
 
 Simon Schocken & Noam Nisan
 
-# Boolean identities
+## Boolean identities
 
 Commutative laws
 ```
@@ -28,7 +30,7 @@ not(x and y) = not(x) or not(y)
 not(x or y) = not(x) and not(y)
 ```
 
-# NAND gate
+## NAND gate
 
 Not-And truth table:
 
@@ -48,7 +50,7 @@ not(x) = nand(x, x)
 and(x, y) = not(nand(x, y))
 ```
 
-# Hardware Description Language (HDL)
+## Hardware Description Language (HDL)
 
 Xor gate example:
 
@@ -99,7 +101,7 @@ CHIP Xor {
 }
 ```
 
-# Multiplexor (Mux)
+## Multiplexor (Mux)
 
 Truth table:
 
@@ -123,7 +125,7 @@ Simplification:
 (b & sel) | (a & !sel)
 ```
 
-# Demultiplexer (Demux)
+## Demultiplexer (Demux)
 
 | in | sel | a | b |
 |----|-----|---|---|
@@ -137,7 +139,7 @@ a = in & !sel
 b = in & sel
 ```
 
-# Project 1
+## Project 1
 
 Suggested order:
 
