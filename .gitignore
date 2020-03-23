@@ -1,4 +1,4 @@
 *.zip
 /book
-/projects/*/*.out
+/projects/**/*.out
 /tools/bin/*.dat
