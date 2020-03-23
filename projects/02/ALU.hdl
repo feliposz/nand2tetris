@@ -42,5 +42,30 @@ CHIP ALU {
         ng; // 1 if (out < 0),  0 otherwise
 
     PARTS:
-   // Put you code here:
+    // Check if x or y must be set to zero
+    Mux16(a=x, b=false, sel=zx, out=x1);
+    Mux16(a=y, b=false, sel=zy, out=y1);
+    // Negate both
+    Not16(in=x1, out=x1Not);
+    Not16(in=y1, out=y1Not);
+    // Now select which to use in the next step
+    Mux16(a=x1, b=x1Not, sel=nx, out=x2);
+    Mux16(a=y1, b=y1Not, sel=ny, out=y2);
+    // Do both functions (add, and)
+    Add16(a=x2, b=y2, out=addOut);
+    And16(a=x2, b=y2, out=andOut);
+    // Select which result to output
+    Mux16(a=andOut, b=addOut, sel=f, out=fOut);
+    // Negate output
+    Not16(in=fOut, out=fOutNot);
+    // Select which output to use (negated or original)
+    Mux16(a=fOut, b=fOutNot, sel=no, out=out,
+        out[15]=ng, // Use high bit to check for negative
+        out[0..7]=out8Low, out[8..15]=out8High); // Split output in 8-bit segments
+    // Check if any bit is set in both segments
+    Or8Way(in=out8Low, out=lowBitSet);
+    Or8Way(in=out8High, out=highBitSet);
+    Or(a=lowBitSet, b=highBitSet, out=bitSet);
+    // If no bits are set, then set zero flag to true
+    Not(in=bitSet, out=zr);
 }
