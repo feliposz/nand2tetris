@@ -180,3 +180,33 @@ cod a 123456 123 123
 Symbolic:
     AM = D|M ; JLT
 ```
+
+## Hack input/output
+
+- High-level vs. low-level approach
+
+### Screen
+
+- Memory map
+    - Physical display is continuosly refreshed many times per second
+    - 512 columns by 256 rows
+    - black/white (1 or 0)
+    - 512 * 256 => 131072 bits => 8192 words (16-bit memory)
+    - Access is only one word at a time (16-bits)
+- Access
+    - Set a pixel (row, col) on/off
+
+    ```
+    word = Screen[32*row + col/16]
+    or
+    word = RAM[16384 + 32*row + col/16]
+    ```
+
+    - Set the col%16 bit of word to 0 or 1
+    - Commit *word* to RAM
+
+### Keyboard
+
+- 16-bit scancode (0 = no keypress)
+- Memory map
+    - Probe *Keyboard* chip or RAM[24576]
