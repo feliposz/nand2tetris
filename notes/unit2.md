@@ -114,7 +114,7 @@ zx | nx | zy | ny | f  | no | function
 0  | 1  | 0  | 0  | 1  | 1  | x-y
 0  | 0  | 0  | 1  | 1  | 1  | y-x
 0  | 0  | 0  | 0  | 0  | 0  | x&y
-0  | 1  | 0  | 1  | 0  | 1  | x|y
+0  | 1  | 0  | 1  | 0  | 1  | x\|y
 
 ## Hack ALU operation
 
