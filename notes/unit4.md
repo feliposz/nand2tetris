@@ -220,7 +220,7 @@ Symbolic:
 - Pointers
 - Input/output
 
-- Examples
+### Register/memory example
 
 ```
 // Adds up two numbers
@@ -255,7 +255,7 @@ M=D // RAM[0]=D
 0;JMP // JMP 13 (BREAK)
 ```
 
-- Symbols:
+- Assembler predefined symbols:
     - R0 - R15 (RAM[0] to RAM[15])
     - SCREEN (RAM[16384])
     - KBD (RAM[24576])
@@ -264,3 +264,104 @@ M=D // RAM[0]=D
     - ARG = 2 
     - THIS = 3
     - THAT = 4
+
+## Branching
+
+- Jump instructions can use symbolic lables declared with `(NAME)`
+
+```
+// If R0>0 Then R1=1 Else R1=0
+
+    @R0
+    D=M
+
+    @POSITIVE
+    D;JGT
+
+    @R1
+    M=0
+    @END
+    0;JMP
+
+(POSITIVE)
+    @1
+    M=1
+
+(END)
+    @END
+    0;JMP
+```
+
+## Variables
+
+- Any symbol name pointed by @ that is not a jump label will be a variable automatically assigned by the assembler.
+
+```
+// Swap R0 and R1 using a temp variable
+    @R1
+    D=M
+    @temp
+    M=D
+    @R0
+    D=M
+    @1
+    M=D
+    @temp
+    D=M
+    @R0
+    M=D
+(END)
+    @END
+    0;JMP
+```
+
+## Iteration
+
+- Example of a program to sum from 1 to N using iteration.
+
+```
+// Sum 1 to N
+// N = RAM[0]
+// SUM = RAM[1]
+// Computes RAM[1] = 1+2+...+RAM[0]
+
+    @R0
+    D=M
+    @n
+    M=D // n = RAM[0]
+
+    @i
+    M=1 // i = 1
+
+    @sum
+    M=0 // sum = 0
+
+(LOOP)
+    @i
+    D=M
+    @n
+    D=D-M
+    @STOP
+    D;JGT // if i > n goto STOP
+
+    @i
+    D=M
+    @sum
+    M=M+D // sum = sum + i
+
+    @i
+    M=M+1 // i = i + 1
+
+    @LOOP
+    0;JMP // goto LOOP
+
+(STOP)
+    @sum
+    D=M
+    @R1
+    M=D // RAM[1] = sum
+
+(END)
+    @END
+    0;JMP
+```
