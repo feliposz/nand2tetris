@@ -58,11 +58,32 @@ Architecture:
 ## Hack CPU
 
 Inputs:
-    - inM[16] from data memory
-    - instruction[16] from instruction/program memory
-    - reset from user
+- inM[16] from data memory
+- instruction[16] from instruction/program memory
+- reset from user
+
 Outputs:
-    - outM[16] to data memory
-    - writeM to data memory
-    - addressM[15] to data memory
-    - pc[15] to instruction/program memory
+- outM[16] to data memory
+- writeM to data memory
+- addressM[15] to data memory
+- pc[15] to instruction/program memory
+
+Components:
+
+- ALU
+- Register A
+- Register D
+- Program Counter
+
+## Memory
+
+- RAM 16k
+- Screen Chip
+- Keyboard Chip
+
+## Computer
+
+Components:
+- CPU
+- RAM
+- ROM32k
