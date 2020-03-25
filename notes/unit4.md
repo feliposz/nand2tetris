@@ -267,7 +267,7 @@ M=D // RAM[0]=D
 
 ## Branching
 
-- Jump instructions can use symbolic lables declared with `(NAME)`
+- Jump instructions can use symbolic labels declared with `(NAME)`
 
 ```
 // If R0>0 Then R1=1 Else R1=0
@@ -365,3 +365,57 @@ M=D // RAM[0]=D
     @END
     0;JMP
 ```
+
+## Pointers
+
+- To operate on pointers (a memory address that points to another memory address), usually its necessary to do something like `A=M` or `A=D+M`.
+- Example using a pointer:
+
+```
+// initialize array arr of size n to -1
+// n is R0
+// arr is pointed by R1
+
+    @R0
+    D=M
+    @n
+    M=D // n = R0
+
+    @R1
+    D=M
+    @arr
+    M=D // arr = R1
+
+    @i
+    M=0 // i = 0
+
+(LOOP)
+    @i
+    D=M
+    @n
+    D=D-M
+    @END
+    D;JEQ // i == n
+
+    @arr
+    D=M
+    @i
+    A=D+M
+    M=-1 // arr[i] = -1
+
+    @i
+    M=M+1 // i++
+
+    @LOOP
+    0;JMP
+
+    @END
+(END)
+    0;JMP
+```
+
+## Input/ouput
+
+- Screen and keyboard are memory mapped on the hack computer.
+- Drawing to screen is the same as writing to memory at addresses 16384 - 24575 (or using SCREEN symbol).
+- Reading from keyboard is the same as reading from 24576 (or using KBD symbol).
