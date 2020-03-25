@@ -210,3 +210,57 @@ Symbolic:
 - 16-bit scancode (0 = no keypress)
 - Memory map
     - Probe *Keyboard* chip or RAM[24576]
+
+## Hack programming
+
+- Registers/memory
+- Branching
+- Variables
+- Iteration
+- Pointers
+- Input/output
+
+- Examples
+
+```
+// Adds up two numbers
+// Usage: put the values in RAM[0] and RAM[1]
+// Output: RAM[2]
+@0
+D=M   // D = RAM[0]
+@1
+D=D+M // D = D + RAM[1]
+@2
+M=D   // RAM[2] = D
+@7
+0;JMP
+```
+
+```
+// Swap values from RAM[0] and RAM[1]
+// Uses RAM[2] as temporary swap
+@1
+D=M // D=RAM[1]
+@2
+M=D // RAM[2]=D
+@0
+D=M // D=RAM[0]
+@1
+M=D // RAM[1]=D
+@2
+D=M // D=RAM[2]
+@0
+M=D // RAM[0]=D
+@13
+0;JMP // JMP 13 (BREAK)
+```
+
+- Symbols:
+    - R0 - R15 (RAM[0] to RAM[15])
+    - SCREEN (RAM[16384])
+    - KBD (RAM[24576])
+    - SP = 0
+    - LCL = 1
+    - ARG = 2 
+    - THIS = 3
+    - THAT = 4
