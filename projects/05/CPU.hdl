@@ -39,49 +39,45 @@ CHIP CPU {
         pc[15];          // address of next instruction
 
     PARTS:
-
-    // 15 14 13 12 11 10 09 08 07 06 05 04 03 02 01 00 <- bits
-    // A  ?  ?  ?  ?  ?  ?  ?  ?  ?  ?  ?  ?  ?  ?  ?  <- A-instruction type
-    // C  -  -  a  c1 c2 c3 c4 c5 c6 d1 d2 d3 j1 j2 j3 <- C-instruction type
+    // If C-instruction, decode bits
+    And(a=instruction[15], b=instruction[12], out=a);  // select A / M register
+    And(a=instruction[15], b=instruction[11], out=c1); // comp bit zx
+    And(a=instruction[15], b=instruction[10], out=c2); // comp bit nx
+    And(a=instruction[15], b=instruction[9], out=c3); // comp bit zy
+    And(a=instruction[15], b=instruction[8], out=c4); // comp bit ny
+    And(a=instruction[15], b=instruction[7], out=c5); // comp bit f
+    And(a=instruction[15], b=instruction[6], out=c6); // comp bit no
+    And(a=instruction[15], b=instruction[5], out=d1); // dest bit A
+    And(a=instruction[15], b=instruction[4], out=d2); // dest bit D
+    And(a=instruction[15], b=instruction[3], out=writeM); // dest bit M
+    And(a=instruction[15], b=instruction[2], out=j1); // jump bit LT
+    And(a=instruction[15], b=instruction[1], out=j2); // jump bit EQ
+    And(a=instruction[15], b=instruction[0], out=j3); // jump bit GT
+    // If A-instruction, set type
+    Not(in=instruction[15], out=isTypeA);
 
     // Handle instruction and register A load
-    Not(in=instruction[15], out=isTypeA);
-    Or(a=isTypeA, b=instruction[5], out=loadRegA); // if isTypeA or d1 = 1 (destination A) then loadRegA = 1
-    Mux16(a=outALU, b=instruction, sel=isTypeA, out=inRegA); // if isTypeA then A = instruction(data) else A = ALU output
+    Or(a=isTypeA, b=d1, out=loadRegA); // @value or d1 set (store A)
+    Mux16(a=outALU, b=instruction, sel=isTypeA, out=inRegA); // store ALU out or 'value'?
     ARegister(in=inRegA, load=loadRegA, out=outRegA, out[0..14]=addressM);
 
     // Handle Y input to ALU (select A or M register)
-    Mux16(a=outRegA, b=inM, sel=instruction[12], out=inY); // if a = 0 then inY = A else inY = M
+    Mux16(a=outRegA, b=inM, sel=a, out=outRegAM); // select A or M register
 
-    // Handle register D load if C-instruction and d2 = 1
-    And(a=instruction[15], b=instruction[4], out=loadRegD);
-    DRegister(in=outALU, load=loadRegD, out=inX);
+    // Handle register D load if d2 set (store D)
+    DRegister(in=outALU, load=d2, out=outRegD);
 
-    // Handle memory write if C-instruction and d3 = 1
-    And(a=instruction[15], b=instruction[3], out=writeM);
-
-    // Handle jumps vs. increment PC
-
-    // instruction[2] = j1 = jump on out < 0
-    // instruction[1] = j2 = jump on out = 0
-    // instruction[0] = j3 = jump on out > 0
-    // if zr = 1 and j2 = 1 then jump
-    // if ng = 1 and j1 = 1 then jump
-    // if zr = 0 and ng = 0 and j3 = 1 then jump
-
-    Not(in=isZero, out=notZero);
-    Not(in=isNeg, out=notNeg);
-    And(a=notZero, b=notNeg, out=isPos);
-    And(a=isNeg, b=instruction[2], out=jumpOnLesser);
-    And(a=isZero, b=instruction[1], out=jumpOnEqual);
-    And(a=isPos, b=instruction[0], out=jumpOnGreater);
-    Or(a=jumpOnLesser, b=jumpOnGreater, out=jumpOnNonEqual);
-    Or(a=jumpOnEqual, b=jumpOnNonEqual, out=anyJump);
-    Not(in=anyJump, out=noJump);
-    Or(a=noJump, b=isTypeA, out=doIncrement);
-    Not(in=doIncrement, out=doJump);
+    // Handle branching
+    Or(a=isZero, b=isNeg, out=notPos);
+    Not(in=notPos, out=isPos);
+    And(a=isNeg, b=j1, out=jmpLT);
+    And(a=isZero, b=j2, out=jmpEQ);
+    And(a=isPos, b=j3, out=jmpGT);
+    Or(a=jmpLT, b=jmpGT, out=jmpNE);
+    Or(a=jmpEQ, b=jmpNE, out=doJump);
+    Not(in=doJump, out=doIncrement);
 
     PC(in=outRegA, load=doJump, inc=doIncrement, reset=reset, out[0..14]=pc);
 
-    ALU(x=inX, y=inY, zx=instruction[11], nx=instruction[10], zy=instruction[9], ny=instruction[8], f=instruction[7], no=instruction[6], out=outALU, out=outM, zr=isZero, ng=isNeg);
+    ALU(x=outRegD, y=outRegAM, zx=c1, nx=c2, zy=c3, ny=c4, f=c5, no=c6, out=outALU, out=outM, zr=isZero, ng=isNeg);
 }
