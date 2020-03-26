@@ -48,7 +48,7 @@ CHIP CPU {
     Not(in=instruction[15], out=isTypeA);
     Or(a=isTypeA, b=instruction[5], out=loadRegA); // if isTypeA or d1 = 1 (destination A) then loadRegA = 1
     Mux16(a=outALU, b=instruction, sel=isTypeA, out=inRegA); // if isTypeA then A = instruction(data) else A = ALU output
-    Register(in=inRegA, load=loadRegA, out=outRegA, out[0..14]=addressM);
+    ARegister(in=inRegA, load=loadRegA, out=outRegA, out[0..14]=addressM);
 
     // Handle Y input to ALU (select A or M register)
     Mux16(a=outRegA, b=inM, sel=instruction[12], out=inY); // if a = 0 then inY = A else inY = M
