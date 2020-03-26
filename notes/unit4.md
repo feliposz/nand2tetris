@@ -156,7 +156,7 @@ dest | j1 | j2 | j3 | effect
 null | 0  | 0  | 0  | no jump
 JGT  | 0  | 0  | 1  | if out>0 jump
 JEQ  | 0  | 1  | 0  | if out=0 jump
-JGE  | 0  | 1  | 1  | if out<=0 jump
+JGE  | 0  | 1  | 1  | if out>=0 jump
 JLT  | 1  | 0  | 0  | if out<0 jump
 JNE  | 1  | 0  | 1  | if out!=0 jump
 JLE  | 1  | 1  | 0  | if out<=0 jump
