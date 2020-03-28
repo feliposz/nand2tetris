@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>nand2tetris - Hack Machine Language Disassembler</title>
+    <script src="projects/06/hacklib.js"></script>
+    <style>
+        * {
+            font-family: sans-serif;
+        }
+        textarea {
+            font-family: monospace;
+        }
+        .box {
+            display: inline-block;
+        }
+    </style>
+</head>
+<body>
+    
+    <h1>Hack Machine Language</h1>
+
+    <p>A simple machine language assembler/disassembler for the Hack computer from <a href="https://www.nand2tetris.org/">nand2tetris</a>.</p>
+
+    <h2>Assembler</h2>
+
+    <div class="box">
+        <label for="txtAsmSrc">Program (hack assembly)</label>
+        <br>
+        <textarea id="txtAsmSrc" cols=25 rows=15></textarea>
+        <br>
+        <input type='file' id="filePickerAsm" accept=".asm">
+    </div>
+
+    <div class="box">
+        <label for="txtBinDst">Binary (hack machine code)</label>
+        <br>
+        <textarea id="txtBinDst" cols=25 rows=15></textarea>
+        <br>
+        <button id="btnAsm">Assemble</button>
+    </div>
+
+    <h2>Disassembler</h2>
+
+    <div class="box">
+        <label for="txtBinSrc">Binary (machine language)</label>
+        <br>
+        <textarea id="txtBinSrc" cols=25 rows=15></textarea>
+        <br>
+        <input type='file' id="filePickerHack" accept=".hack">
+    </div>
+
+    <div class="box">
+        <label for="txtAsmDst">Program (disassembled code)</label>
+        <br>
+        <textarea id="txtAsmDst" cols=25 rows=15></textarea>
+        <br>
+        <button id="btnDisasm">Disassemble</button>
+    </div>
+
+    <script>
+        window.onload = function(){
+            document.getElementById('btnDisasm').addEventListener('click', function () {
+                document.getElementById('txtAsmDst').value = hacklib.disasm(document.getElementById('txtBinSrc').value);
+            });
+            document.getElementById('filePickerHack').addEventListener('change', function (evt) {
+                if(evt.target.files.length > 0) {
+                    var fr = new FileReader();
+                    fr.onload = function (evt) {
+                        document.getElementById('txtBinSrc').value = evt.target.result;
+                    };
+                    fr.readAsText(evt.target.files[0]);
+                }
+            });
+            document.getElementById('btnAsm').addEventListener('click', function () {
+                document.getElementById('txtBinDst').value = hacklib.asm(document.getElementById('txtAsmSrc').value);
+            });
+            document.getElementById('filePickerAsm').addEventListener('change', function (evt) {
+                if(evt.target.files.length > 0) {
+                    var fr = new FileReader();
+                    fr.onload = function (evt) {
+                        document.getElementById('txtAsmSrc').value = evt.target.result;
+                    };
+                    fr.readAsText(evt.target.files[0]);
+                }
+            });
+        };
+    </script>
+</body>
+</html>

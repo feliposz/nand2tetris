@@ -27,7 +27,7 @@
     @multiplicand
     D=M
     @product
-    M=M+D // product += multiplicand
+    M=D+M // product += multiplicand
     @multiplier
     M=M-1 // multiplier--
     @LOOP
