@@ -26,6 +26,10 @@ const vmlib = {
             if (parts.length != 3) {
                 throw new Error('Missing argument for ' + parts[0] + ' on line ' + vmlib.currentLine + ' (expected 2)');
             }
+        } else if (parts[0] == 'label' || parts[0] == 'goto' || parts[0] == 'if-goto') {
+            if (parts.length != 2) {
+                throw new Error('Missing argument for ' + parts[0] + ' on line ' + vmlib.currentLine + ' (expected 1)');
+            }
         } else if (parts.length != 1) {
             throw new Error('Too many argument for ' + parts[0] + ' on line ' + vmlib.currentLine + ' (expected none)');
         }
@@ -72,6 +76,15 @@ const vmlib = {
                         break;
                     case 'lt':
                         out.push(vmlib.codeLt());
+                        break;
+                    case 'label':
+                        out.push(vmlib.codeLabel(parsed.arg1));
+                        break;
+                    case 'goto':
+                        out.push(vmlib.codeGoto(parsed.arg1));
+                        break;
+                    case 'if-goto':
+                        out.push(vmlib.codeIf(parsed.arg1));
                         break;
                     default:
                         throw new Error('Invalid command "' + parsed.cmd + '" on line ' + vmlib.currentLine);
@@ -298,6 +311,29 @@ const vmlib = {
     nextJumpAdress: function(label) {
         return vmlib.basename + '.' + label + vmlib.jumpAddress++;
     },
+
+    codeLabel: function(label) {
+        return '(' + vmlib.basename + '.' + label + ')';
+    },
+
+    codeGoto: function(label) {
+        const out = [];
+        out.push('@' + vmlib.basename + '.' + label);
+        out.push('0;JMP');
+        return out.join('\n');
+    },
+
+    codeIf: function(label) {
+        const out = [];
+        out.push('@SP');
+        out.push('M=M-1');
+        out.push('A=M');
+        out.push('D=M');
+        out.push('@' + vmlib.basename + '.' + label);
+        out.push('D;JNE');
+        return out.join('\n');
+    },
+
 };
 
 module.exports = vmlib;
