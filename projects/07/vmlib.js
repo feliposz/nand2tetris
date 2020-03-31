@@ -2,6 +2,7 @@ const vmlib = {
 
     basename: '',
     jumpAddress: 0,
+    currentLine: 0,
 
     main: function(text) {
         const lines = vmlib.getLines(text);
@@ -14,62 +15,76 @@ const vmlib = {
         return text.split('\n')
             .map(s => s.replace(/\/\/.*$/g, '')) // remove line comments
             .map(s => s.replace(/ +/g, ' ')) // remove repeated spaces
-            .map(s => s.trim())
-            .filter(s => s.length>0); // remove empty lines
+            .map(s => s.trim());
     },
 
-    parseCommand: function (cmd) {
-        const parts = cmd.split(' ');
+    parseCommand: function (line) {
+        const parts = line.split(' ');
+        if (parts.length < 1) {
+            throw new Error('Empty command on line ' + vmlib.currentLine);
+        } else if (parts[0] == 'push' || parts[0] == 'pop') {
+            if (parts.length != 3) {
+                throw new Error('Missing argument for ' + parts[0] + ' on line ' + vmlib.currentLine + ' (expected 2)');
+            }
+        } else if (parts.length != 1) {
+            throw new Error('Too many argument for ' + parts[0] + ' on line ' + vmlib.currentLine + ' (expected none)');
+        }
         return {cmd: parts[0], arg1: parts[1], arg2: parseInt(parts[2], 10)};
     },
 
     translateLines: function(lines) {
         const out = [];
-        lines.map(function (line) {
-            const parsed = vmlib.parseCommand(line);
-            out.push('// '+ line);
-            switch (parsed.cmd) {
-                case 'push':
-                    out.push(vmlib.codePush(parsed.arg1, parsed.arg2));
-                    break;
-                case 'pop':
-                    out.push(vmlib.codePop(parsed.arg1, parsed.arg2));
-                    break;
-                case 'add':
-                    out.push(vmlib.codeAdd());
-                    break;
-                case 'sub':
-                    out.push(vmlib.codeSub());
-                    break;
-                case 'neg':
-                    out.push(vmlib.codeNeg());
-                    break;
-                case 'and':
-                    out.push(vmlib.codeAnd());
-                    break;
-                case 'or':
-                    out.push(vmlib.codeOr());
-                    break;
-                case 'not':
-                    out.push(vmlib.codeNot());
-                    break;
-                case 'eq':
-                    out.push(vmlib.codeEq());
-                    break;
-                case 'gt':
-                    out.push(vmlib.codeGt());
-                    break;
-                case 'lt':
-                    out.push(vmlib.codeLt());
-                    break;
-                default:
-                    throw new Error('Invalid operation: ' + line);
+        lines.forEach(function (line, lineNum) {
+            vmlib.currentLine = lineNum + 1;
+            if (line.length > 0) {
+                const parsed = vmlib.parseCommand(line);
+                out.push('// '+ line);
+                switch (parsed.cmd) {
+                    case 'push':
+                        out.push(vmlib.codePush(parsed.arg1, parsed.arg2));
+                        break;
+                    case 'pop':
+                        out.push(vmlib.codePop(parsed.arg1, parsed.arg2));
+                        break;
+                    case 'add':
+                        out.push(vmlib.codeAdd());
+                        break;
+                    case 'sub':
+                        out.push(vmlib.codeSub());
+                        break;
+                    case 'neg':
+                        out.push(vmlib.codeNeg());
+                        break;
+                    case 'and':
+                        out.push(vmlib.codeAnd());
+                        break;
+                    case 'or':
+                        out.push(vmlib.codeOr());
+                        break;
+                    case 'not':
+                        out.push(vmlib.codeNot());
+                        break;
+                    case 'eq':
+                        out.push(vmlib.codeEq());
+                        break;
+                    case 'gt':
+                        out.push(vmlib.codeGt());
+                        break;
+                    case 'lt':
+                        out.push(vmlib.codeLt());
+                        break;
+                    default:
+                        throw new Error('Invalid command "' + parsed.cmd + '" on line ' + vmlib.currentLine);
+                }
             }
         });
         return out;
     },
 
     codePush: function(segment, i) {
+        if (isNaN(i)) {
+            throw new Error('Invalid number on push ' + segment + ' on line ' + vmlib.currentLine);
+        }
         switch(segment) {
             case 'local':
                 return vmlib.codePushIndirect('LCL', i);
@@ -87,10 +102,15 @@ const vmlib = {
                 return vmlib.codePushDirect(5 + i, false);
             case 'pointer':
                 return vmlib.codePushDirect(['THIS', 'THAT'][i], false);
+            default:
+                throw new Error('Invalid push segment ' + segment + ' on line ' + vmlib.currentLine);
         }
     },
 
     codePop: function(segment, i) {
+        if (isNaN(i)) {
+            throw new Error('Invalid number on push ' + segment  + ' on line ' + vmlib.currentLine);
+        }
         switch(segment) {
             case 'local':
                 return vmlib.codePopIndirect('LCL', i);
@@ -106,7 +126,9 @@ const vmlib = {
                 return vmlib.codePopDirect(5 + i);
             case 'pointer':
                 return vmlib.codePopDirect(['THIS', 'THAT'][i]);
-        }
+            default:
+                throw new Error('Invalid pop segment ' + segment + ' on line ' + vmlib.currentLine);
+            }
     },
 
     codeAdd: function() {

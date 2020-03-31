@@ -12,11 +12,15 @@ fs.readFile(infile, 'utf8', function (err, data) {
     if (err) {
         console.error(err.message);
     } else {
-        const out = vmlib.main(data.replace(/\r\n/g, '\n'));
-        fs.writeFile(outfile, out, function (err) {
-            if (err) {
-                console.error(err.message);
-            }
-        });
+        try {
+            const out = vmlib.main(data.replace(/\r\n/g, '\n'));
+            fs.writeFile(outfile, out, function (err) {
+                if (err) {
+                    console.error(err.message);
+                }
+            });
+        } catch (e) {
+            console.error(e.message);
+        }
     }
 });
