@@ -1,6 +1,7 @@
 const vmlib = {
 
     basename: '',
+    functionName: '',
     jumpAddress: 0,
     currentLine: 0,
 
@@ -22,7 +23,7 @@ const vmlib = {
         const parts = line.split(' ');
         if (parts.length < 1) {
             throw new Error('Empty command on line ' + vmlib.currentLine);
-        } else if (parts[0] == 'push' || parts[0] == 'pop') {
+        } else if (parts[0] == 'push' || parts[0] == 'pop' || parts[0] == 'call' || parts[0] == 'function') {
             if (parts.length != 3) {
                 throw new Error('Missing argument for ' + parts[0] + ' on line ' + vmlib.currentLine + ' (expected 2)');
             }
@@ -85,6 +86,15 @@ const vmlib = {
                         break;
                     case 'if-goto':
                         out.push(vmlib.codeIf(parsed.arg1));
+                        break;
+                    case 'call':
+                        out.push(vmlib.codeCall(parsed.arg1, parsed.arg2));
+                        break;
+                    case 'function':
+                        out.push(vmlib.codeFunction(parsed.arg1, parsed.arg2));
+                        break;
+                    case 'return':
+                        out.push(vmlib.codeReturn());
                         break;
                     default:
                         throw new Error('Invalid command "' + parsed.cmd + '" on line ' + vmlib.currentLine);
@@ -313,12 +323,12 @@ const vmlib = {
     },
 
     codeLabel: function(label) {
-        return '(' + vmlib.basename + '.' + label + ')';
+        return '(' + vmlib.functionName + '$' + label + ')';
     },
 
     codeGoto: function(label) {
         const out = [];
-        out.push('@' + vmlib.basename + '.' + label);
+        out.push('@' + vmlib.functionName + '$' + label);
         out.push('0;JMP');
         return out.join('\n');
     },
@@ -329,8 +339,169 @@ const vmlib = {
         out.push('M=M-1');
         out.push('A=M');
         out.push('D=M');
-        out.push('@' + vmlib.basename + '.' + label);
+        out.push('@' + vmlib.functionName + '$' + label);
         out.push('D;JNE');
+        return out.join('\n');
+    },
+
+    nextReturnAddress: function(label) {
+        return label + vmlib.jumpAddress++;
+    },
+
+    codeCall: function(functionName, numArgs) {
+        const retLabel = vmlib.nextReturnAddress(functionName + '$ret');
+        const out = [];
+
+        // push return address
+        out.push('@' + retLabel);
+        out.push('D=A');
+        out.push('@SP');
+        out.push('A=M');
+        out.push('M=D');
+        out.push('@SP');
+        out.push('M=M+1');
+
+        // save frame (LCL, ARG, THIS, THAT)
+        out.push('@LCL');
+        out.push('D=M');
+        out.push('@SP');
+        out.push('A=M');
+        out.push('M=D');
+        out.push('@SP');
+        out.push('M=M+1');
+        out.push('@ARG');
+        out.push('D=M');
+        out.push('@SP');
+        out.push('A=M');
+        out.push('M=D');
+        out.push('@SP');
+        out.push('M=M+1');
+        out.push('@THIS');
+        out.push('D=M');
+        out.push('@SP');
+        out.push('A=M');
+        out.push('M=D');
+        out.push('@SP');
+        out.push('M=M+1');
+        out.push('@THAT');
+        out.push('D=M');
+        out.push('@SP');
+        out.push('A=M');
+        out.push('M=D');
+        out.push('@SP');
+        out.push('M=M+1');
+
+        // set ARG = SP - 5 - numArgs
+        out.push('@' + (5 + numArgs));
+        out.push('D=A');
+        out.push('@SP');
+        out.push('D=M-D');
+        out.push('@ARG');
+        out.push('M=D');
+
+        // jump to function
+        out.push('@' + functionName);
+        out.push('0;JMP');
+
+        // label to return
+        out.push('(' + retLabel + ')');
+        return out.join('\n');
+    },
+
+    codeFunction: function(functionName, numLocals) {
+        const out = [];
+        vmlib.functionName = functionName;
+        out.push('(' + functionName + ')');
+        // set LCL
+        out.push('@SP');
+        out.push('D=M');
+        out.push('@LCL');
+        out.push('M=D');
+        // push 0 * numLocals times
+        for (var i = 0; i < numLocals; i++) {
+            out.push('@SP');
+            out.push('A=M');
+            out.push('M=0');
+            out.push('@SP');
+            out.push('M=M+1');
+        }
+        return out.join('\n');
+    },
+
+    codeReturn: function() {
+        const out = [];
+
+        // save endFrame to R14
+        out.push('@LCL');
+        out.push('D=M');
+        out.push('@R14');
+        out.push('M=D');
+
+        // save retAddr to R15
+        out.push('@5');
+        out.push('D=A')
+        out.push('@R14');
+        out.push('A=M-D');
+        out.push('D=M');
+        out.push('@R15');
+        out.push('M=D');
+
+        // *ARG = pop
+        out.push('@SP');
+        out.push('M=M-1');
+        out.push('@SP');
+        out.push('A=M');
+        out.push('D=M');
+        out.push('@ARG');
+        out.push('A=M');
+        out.push('M=D');
+
+        // save current ARG to R13
+        out.push('@ARG');
+        out.push('D=M');
+        out.push('@R13');
+        out.push('M=D');
+
+        // restore frame
+        out.push('@R14');
+        out.push('M=M-1');
+        out.push('A=M');
+        out.push('D=M');
+        out.push('@THAT');
+        out.push('M=D');
+
+        out.push('@R14');
+        out.push('M=M-1');
+        out.push('A=M');
+        out.push('D=M');
+        out.push('@THIS');
+        out.push('M=D');
+
+        out.push('@R14');
+        out.push('M=M-1');
+        out.push('A=M');
+        out.push('D=M');
+        out.push('@ARG');
+        out.push('M=D');
+
+        out.push('@R14');
+        out.push('M=M-1');
+        out.push('A=M');
+        out.push('D=M');
+        out.push('@LCL');
+        out.push('M=D');
+
+        // set SP to caller value (saved ARG address)
+        out.push('@R13');
+        out.push('D=M');
+        out.push('@SP');
+        out.push('M=D+1'); // +1 = to fake "push" return value
+
+        // jump to retAddr
+        out.push('@R15');
+        out.push('A=M');
+        out.push('0;JMP');
+
         return out.join('\n');
     },
 
