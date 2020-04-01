@@ -306,7 +306,7 @@ const vmlib = {
         out.push('@' + jumpTrue);
         out.push('D;' + compareOp); // if x compareOp y then D=1 else D=0
         out.push('@' + jumpFalse);
-        out.push('D=0;JMP')
+        out.push('D=0;JMP');
         out.push('(' + jumpTrue + ')');
         out.push('D=-1');
         out.push('(' + jumpFalse + ')');
@@ -502,6 +502,17 @@ const vmlib = {
         out.push('A=M');
         out.push('0;JMP');
 
+        return out.join('\n');
+    },
+
+    codeBoot: function() {
+        const out = [];
+        out.push('@256');
+        out.push('D=A');
+        out.push('@SP');
+        out.push('M=D');
+        out.push('@Sys.init');
+        out.push('0;JMP');
         return out.join('\n');
     },
 
