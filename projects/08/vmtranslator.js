@@ -5,6 +5,7 @@ const vmlib = require('./vmlib.js');
 // TODO: Handle command line errors
 const readpath = process.argv[2];
 const addBoostrap = process.argv[3] || 'y';
+const altFunction = process.argv[4] || 'f';
 const basename = path.basename(readpath, path.extname(readpath));
 const stat = fs.statSync(readpath);
 
@@ -13,7 +14,7 @@ var out = [];
 
 if (addBoostrap == 'y') {
     console.log('Bootstrap code added')
-    out.push(vmlib.codeBoot());
+    out.push(vmlib.codeBoot(altFunction == 'f'));
 }
 
 try {

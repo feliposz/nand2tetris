@@ -1,11 +1,10 @@
-// push constant 0
+// push constant 0 and pop local 0 inplace
 @0
 D=A
 @SP
 AM=M+1
 A=A-1
 M=D
-// pop local 0
 @LCL
 D=M
 @R13
@@ -40,8 +39,7 @@ AM=M-1
 D=M
 @SP
 A=M-1
-D=D+M
-M=D
+M=D+M
 // pop local 0
 @LCL
 D=M
@@ -74,8 +72,7 @@ AM=M-1
 D=M
 @SP
 A=M-1
-D=M-D
-M=D
+M=M-D
 // pop argument 0
 @ARG
 D=M

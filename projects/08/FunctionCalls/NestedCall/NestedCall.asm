@@ -1,75 +1,133 @@
+@256
+D=A
+@SP
+M=D
+@5
+D=A
+@R13
+M=D
+@Sys.init
+D=A
+@R14
+M=D
+@Sys.init$ret0
+D=A
+@VM$CALL
+0;JMP
+(Sys.init$ret0)
+(VM$STOP)
+@VM$STOP
+0;JMP
+(VM$CALL)
+@SP
+AM=M+1
+A=A-1
+M=D
+@LCL
+D=M
+@SP
+AM=M+1
+A=A-1
+M=D
+@ARG
+D=M
+@SP
+AM=M+1
+A=A-1
+M=D
+@THIS
+D=M
+@SP
+AM=M+1
+A=A-1
+M=D
+@THAT
+D=M
+@SP
+AM=M+1
+A=A-1
+M=D
+@R13
+D=M
+@SP
+D=M-D
+@ARG
+M=D
+@R14
+A=M
+0;JMP
+(VM$RETURN)
+@5
+D=A
+@LCL
+A=M-D
+D=M
+@R13
+M=D
+@SP
+AM=M-1
+D=M
+@ARG
+A=M
+M=D
+D=A
+@SP
+M=D+1
+@LCL
+D=M
+@R14
+AM=D-1
+D=M
+@THAT
+M=D
+@R14
+AM=M-1
+D=M
+@THIS
+M=D
+@R14
+AM=M-1
+D=M
+@ARG
+M=D
+@R14
+AM=M-1
+D=M
+@LCL
+M=D
+@R13
+A=M
+0;JMP
 // function Sys.init 0
 (Sys.init)
 @SP
 D=M
 @LCL
 M=D
-// push constant 4000
+// push constant 4000 and pop pointer 0 inplace
 @4000
 D=A
-@SP
-AM=M+1
-A=A-1
-M=D
-// pop pointer 0
-@SP
-AM=M-1
-D=M
 @THIS
 M=D
-// push constant 5000
+// push constant 5000 and pop pointer 1 inplace
 @5000
 D=A
-@SP
-AM=M+1
-A=A-1
-M=D
-// pop pointer 1
-@SP
-AM=M-1
-D=M
 @THAT
 M=D
 // call Sys.main 0
-@Sys.main$ret0
-D=A
-@SP
-AM=M+1
-A=A-1
-M=D
-@LCL
-D=M
-@SP
-AM=M+1
-A=A-1
-M=D
-@ARG
-D=M
-@SP
-AM=M+1
-A=A-1
-M=D
-@THIS
-D=M
-@SP
-AM=M+1
-A=A-1
-M=D
-@THAT
-D=M
-@SP
-AM=M+1
-A=A-1
-M=D
 @5
 D=A
-@SP
-D=M-D
-@ARG
+@R13
 M=D
 @Sys.main
+D=A
+@R14
+M=D
+@Sys.main$ret1
+D=A
+@VM$CALL
 0;JMP
-(Sys.main$ret0)
+(Sys.main$ret1)
 // pop temp 1
 @SP
 AM=M-1
@@ -107,40 +165,23 @@ M=0
 AM=M+1
 A=A-1
 M=0
-// push constant 4001
+// push constant 4001 and pop pointer 0 inplace
 @4001
 D=A
-@SP
-AM=M+1
-A=A-1
-M=D
-// pop pointer 0
-@SP
-AM=M-1
-D=M
 @THIS
 M=D
-// push constant 5001
+// push constant 5001 and pop pointer 1 inplace
 @5001
 D=A
-@SP
-AM=M+1
-A=A-1
-M=D
-// pop pointer 1
-@SP
-AM=M-1
-D=M
 @THAT
 M=D
-// push constant 200
+// push constant 200 and pop local 1 inplace
 @200
 D=A
 @SP
 AM=M+1
 A=A-1
 M=D
-// pop local 1
 @LCL
 D=M+1
 @R13
@@ -151,14 +192,13 @@ D=M
 @R13
 A=M
 M=D
-// push constant 40
+// push constant 40 and pop local 2 inplace
 @40
 D=A
 @SP
 AM=M+1
 A=A-1
 M=D
-// pop local 2
 @2
 D=A
 @LCL
@@ -171,14 +211,13 @@ D=M
 @R13
 A=M
 M=D
-// push constant 6
+// push constant 6 and pop local 3 inplace
 @6
 D=A
 @SP
 AM=M+1
 A=A-1
 M=D
-// pop local 3
 @3
 D=A
 @LCL
@@ -199,45 +238,19 @@ AM=M+1
 A=A-1
 M=D
 // call Sys.add12 1
-@Sys.add12$ret1
-D=A
-@SP
-AM=M+1
-A=A-1
-M=D
-@LCL
-D=M
-@SP
-AM=M+1
-A=A-1
-M=D
-@ARG
-D=M
-@SP
-AM=M+1
-A=A-1
-M=D
-@THIS
-D=M
-@SP
-AM=M+1
-A=A-1
-M=D
-@THAT
-D=M
-@SP
-AM=M+1
-A=A-1
-M=D
 @6
 D=A
-@SP
-D=M-D
-@ARG
+@R13
 M=D
 @Sys.add12
+D=A
+@R14
+M=D
+@Sys.add12$ret2
+D=A
+@VM$CALL
 0;JMP
-(Sys.add12$ret1)
+(Sys.add12$ret2)
 // pop temp 0
 @SP
 AM=M-1
@@ -296,73 +309,30 @@ AM=M-1
 D=M
 @SP
 A=M-1
-D=D+M
-M=D
+M=D+M
 // add
 @SP
 AM=M-1
 D=M
 @SP
 A=M-1
-D=D+M
-M=D
+M=D+M
 // add
 @SP
 AM=M-1
 D=M
 @SP
 A=M-1
-D=D+M
-M=D
+M=D+M
 // add
 @SP
 AM=M-1
 D=M
 @SP
 A=M-1
-D=D+M
-M=D
+M=D+M
 // return
-@5
-D=A
-@LCL
-A=M-D
-D=M
-@R13
-M=D
-@SP
-AM=M-1
-D=M
-@ARG
-A=M
-M=D
-D=A
-@SP
-M=D+1
-@LCL
-D=M
-@R14
-AM=D-1
-D=M
-@THAT
-M=D
-@R14
-AM=M-1
-D=M
-@THIS
-M=D
-@R14
-AM=M-1
-D=M
-@ARG
-M=D
-@R14
-AM=M-1
-D=M
-@LCL
-M=D
-@R13
-A=M
+@VM$RETURN
 0;JMP
 // function Sys.add12 0
 (Sys.add12)
@@ -370,30 +340,14 @@ A=M
 D=M
 @LCL
 M=D
-// push constant 4002
+// push constant 4002 and pop pointer 0 inplace
 @4002
 D=A
-@SP
-AM=M+1
-A=A-1
-M=D
-// pop pointer 0
-@SP
-AM=M-1
-D=M
 @THIS
 M=D
-// push constant 5002
+// push constant 5002 and pop pointer 1 inplace
 @5002
 D=A
-@SP
-AM=M+1
-A=A-1
-M=D
-// pop pointer 1
-@SP
-AM=M-1
-D=M
 @THAT
 M=D
 // push argument 0
@@ -417,47 +371,7 @@ AM=M-1
 D=M
 @SP
 A=M-1
-D=D+M
-M=D
+M=D+M
 // return
-@5
-D=A
-@LCL
-A=M-D
-D=M
-@R13
-M=D
-@SP
-AM=M-1
-D=M
-@ARG
-A=M
-M=D
-D=A
-@SP
-M=D+1
-@LCL
-D=M
-@R14
-AM=D-1
-D=M
-@THAT
-M=D
-@R14
-AM=M-1
-D=M
-@THIS
-M=D
-@R14
-AM=M-1
-D=M
-@ARG
-M=D
-@R14
-AM=M-1
-D=M
-@LCL
-M=D
-@R13
-A=M
+@VM$RETURN
 0;JMP

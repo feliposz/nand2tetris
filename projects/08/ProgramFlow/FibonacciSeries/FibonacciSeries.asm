@@ -1,25 +1,16 @@
-// push argument 1
+// push argument 1 and pop pointer 1 inplace
 @ARG
 A=M+1
 D=M
-@SP
-AM=M+1
-A=A-1
-M=D
-// pop pointer 1
-@SP
-AM=M-1
-D=M
 @THAT
 M=D
-// push constant 0
+// push constant 0 and pop that 0 inplace
 @0
 D=A
 @SP
 AM=M+1
 A=A-1
 M=D
-// pop that 0
 @THAT
 D=M
 @R13
@@ -30,14 +21,13 @@ D=M
 @R13
 A=M
 M=D
-// push constant 1
+// push constant 1 and pop that 1 inplace
 @1
 D=A
 @SP
 AM=M+1
 A=A-1
 M=D
-// pop that 1
 @THAT
 D=M+1
 @R13
@@ -69,8 +59,7 @@ AM=M-1
 D=M
 @SP
 A=M-1
-D=M-D
-M=D
+M=M-D
 // pop argument 0
 @ARG
 D=M
@@ -125,8 +114,7 @@ AM=M-1
 D=M
 @SP
 A=M-1
-D=D+M
-M=D
+M=D+M
 // pop that 2
 @2
 D=A
@@ -160,8 +148,7 @@ AM=M-1
 D=M
 @SP
 A=M-1
-D=D+M
-M=D
+M=D+M
 // pop pointer 1
 @SP
 AM=M-1
@@ -189,8 +176,7 @@ AM=M-1
 D=M
 @SP
 A=M-1
-D=M-D
-M=D
+M=M-D
 // pop argument 0
 @ARG
 D=M

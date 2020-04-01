@@ -34,8 +34,7 @@ AM=M-1
 D=M
 @SP
 A=M-1
-D=D+M
-M=D
+M=D+M
 // not
 @SP
 A=M-1
@@ -54,8 +53,7 @@ AM=M-1
 D=M
 @SP
 A=M-1
-D=D+M
-M=D
+M=D+M
 // push argument 1
 @ARG
 A=M+1
@@ -70,8 +68,7 @@ AM=M-1
 D=M
 @SP
 A=M-1
-D=M-D
-M=D
+M=M-D
 // return
 @5
 D=A
