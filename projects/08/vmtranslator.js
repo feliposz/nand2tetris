@@ -4,23 +4,24 @@ const vmlib = require('./vmlib.js');
 
 // TODO: Handle command line errors
 const readpath = process.argv[2];
+const addBoostrap = process.argv[3] || 'y';
 const basename = path.basename(readpath, path.extname(readpath));
 const stat = fs.statSync(readpath);
 
 var writefile = '';
 var out = [];
 
+if (addBoostrap == 'y') {
+    console.log('Bootstrap code added')
+    out.push(vmlib.codeBoot());
+}
+
 try {
     if (stat.isDirectory()) {
-
+        
         console.log('Processing directory ' + readpath);
         writefile =  path.join(readpath, basename + '.asm');
         const files = fs.readdirSync(readpath).filter(f => path.extname(f) == '.vm');
-
-        if (files.indexOf('Main.vm') >= 0) {
-            console.log('Bootstrap code added')
-            out.push(vmlib.codeBoot());
-        }
 
         files.forEach(function (file) {
             const filepath = path.join(readpath, file);

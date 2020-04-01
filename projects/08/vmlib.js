@@ -206,10 +206,9 @@ const vmlib = {
         }
         out.push('D=M'); // get value using indirect addressing
         out.push('@SP');
-        out.push('A=M');
-        out.push('M=D');
-        out.push('@SP');
-        out.push('M=M+1'); // push value to stack
+        out.push('AM=M+1');
+        out.push('A=A-1');
+        out.push('M=D'); // push value to stack
         return out.join('\n');
     },
 
@@ -218,10 +217,9 @@ const vmlib = {
         out.push('@' + address);
         out.push(isConstant ? 'D=A' : 'D=M'); // get value directly
         out.push('@SP');
-        out.push('A=M');
-        out.push('M=D');
-        out.push('@SP');
-        out.push('M=M+1'); // push value to stack
+        out.push('AM=M+1');
+        out.push('A=A-1');
+        out.push('M=D'); // push value to stack
         return out.join('\n');
     },
 
@@ -242,8 +240,7 @@ const vmlib = {
         out.push('@R13');
         out.push('M=D'); // save pointer to destination in temp register 13
         out.push('@SP');
-        out.push('M=M-1');
-        out.push('A=M');
+        out.push('AM=M-1');
         out.push('D=M'); // pop value
         out.push('@R13');
         out.push('A=M');
@@ -254,8 +251,7 @@ const vmlib = {
     codePopDirect: function(address) {
         const out = [];
         out.push('@SP');
-        out.push('M=M-1');
-        out.push('A=M');
+        out.push('AM=M-1');
         out.push('D=M'); // pop value
         out.push('@' + address);
         out.push('M=D'); // store in destination
@@ -265,29 +261,20 @@ const vmlib = {
     codeBinaryOp: function(instruction) {
         const out = [];
         out.push('@SP');
-        out.push('M=M-1');
-        out.push('A=M');
+        out.push('AM=M-1');
         out.push('D=M'); // pop y
         out.push('@SP');
-        out.push('M=M-1');
-        out.push('A=M'); // pop x
+        out.push('A=M-1'); // pop x, push result (in-place)
         out.push(instruction)
-        out.push('@SP');
-        out.push('A=M');
         out.push('M=D');
-        out.push('@SP');
-        out.push('M=M+1'); // push result
         return out;
     },
 
     codeUnaryOp: function(instruction) {
         const out = [];
         out.push('@SP');
-        out.push('M=M-1');
-        out.push('A=M'); // pop y
-        out.push(instruction);
-        out.push('@SP');
-        out.push('M=M+1'); // push result
+        out.push('A=M-1');
+        out.push(instruction); // apply directly on top of stack
         return out;
     },
 
@@ -296,12 +283,10 @@ const vmlib = {
         const jumpTrue = vmlib.nextJumpAdress(compareOp + '_true');
         const jumpFalse = vmlib.nextJumpAdress(compareOp + '_false');
         out.push('@SP');
-        out.push('M=M-1');
-        out.push('A=M');
+        out.push('AM=M-1');
         out.push('D=M'); // pop y
         out.push('@SP');
-        out.push('M=M-1');
-        out.push('A=M'); // pop x
+        out.push('AM=M-1'); // pop x
         out.push('D=M-D');
         out.push('@' + jumpTrue);
         out.push('D;' + compareOp); // if x compareOp y then D=1 else D=0
@@ -311,10 +296,9 @@ const vmlib = {
         out.push('D=-1');
         out.push('(' + jumpFalse + ')');
         out.push('@SP');
-        out.push('A=M');
-        out.push('M=D');
-        out.push('@SP');
-        out.push('M=M+1'); // push result
+        out.push('AM=M+1');
+        out.push('A=A-1');
+        out.push('M=D'); // push result
         return out;
     },
 
@@ -336,8 +320,7 @@ const vmlib = {
     codeIf: function(label) {
         const out = [];
         out.push('@SP');
-        out.push('M=M-1');
-        out.push('A=M');
+        out.push('AM=M-1');
         out.push('D=M');
         out.push('@' + vmlib.functionName + '$' + label);
         out.push('D;JNE');
@@ -356,40 +339,35 @@ const vmlib = {
         out.push('@' + retLabel);
         out.push('D=A');
         out.push('@SP');
-        out.push('A=M');
+        out.push('AM=M+1');
+        out.push('A=A-1');
         out.push('M=D');
-        out.push('@SP');
-        out.push('M=M+1');
 
         // save frame (LCL, ARG, THIS, THAT)
         out.push('@LCL');
         out.push('D=M');
         out.push('@SP');
-        out.push('A=M');
+        out.push('AM=M+1');
+        out.push('A=A-1');
         out.push('M=D');
-        out.push('@SP');
-        out.push('M=M+1');
         out.push('@ARG');
         out.push('D=M');
         out.push('@SP');
-        out.push('A=M');
+        out.push('AM=M+1');
+        out.push('A=A-1');
         out.push('M=D');
-        out.push('@SP');
-        out.push('M=M+1');
         out.push('@THIS');
         out.push('D=M');
         out.push('@SP');
-        out.push('A=M');
+        out.push('AM=M+1');
+        out.push('A=A-1');
         out.push('M=D');
-        out.push('@SP');
-        out.push('M=M+1');
         out.push('@THAT');
         out.push('D=M');
         out.push('@SP');
-        out.push('A=M');
+        out.push('AM=M+1');
+        out.push('A=A-1');
         out.push('M=D');
-        out.push('@SP');
-        out.push('M=M+1');
 
         // set ARG = SP - 5 - numArgs
         out.push('@' + (5 + numArgs));
@@ -420,10 +398,9 @@ const vmlib = {
         // push 0 * numLocals times
         for (var i = 0; i < numLocals; i++) {
             out.push('@SP');
-            out.push('A=M');
+            out.push('AM=M+1');
+            out.push('A=A-1');
             out.push('M=0');
-            out.push('@SP');
-            out.push('M=M+1');
         }
         return out.join('\n');
     },
@@ -431,74 +408,58 @@ const vmlib = {
     codeReturn: function() {
         const out = [];
 
-        // save endFrame to R14
-        out.push('@LCL');
-        out.push('D=M');
-        out.push('@R14');
-        out.push('M=D');
-
-        // save retAddr to R15
+        // save retAddr to R13
         out.push('@5');
         out.push('D=A')
-        out.push('@R14');
+        out.push('@LCL');
         out.push('A=M-D');
-        out.push('D=M');
-        out.push('@R15');
-        out.push('M=D');
-
-        // *ARG = pop
-        out.push('@SP');
-        out.push('M=M-1');
-        out.push('@SP');
-        out.push('A=M');
-        out.push('D=M');
-        out.push('@ARG');
-        out.push('A=M');
-        out.push('M=D');
-
-        // save current ARG to R13
-        out.push('@ARG');
         out.push('D=M');
         out.push('@R13');
         out.push('M=D');
 
-        // restore frame
-        out.push('@R14');
-        out.push('M=M-1');
+        // ARG[0] = pop return value
+        out.push('@SP');
+        out.push('AM=M-1');
+        out.push('D=M');
+        out.push('@ARG');
         out.push('A=M');
+        out.push('M=D');
+        // set SP to caller value
+        out.push('D=A'); // A still pointing to ARG[0]
+        out.push('@SP');
+        out.push('M=D+1'); // +1 = to fake "push" return value
+
+        // save endFrame to R14
+        out.push('@LCL');
+        out.push('D=M');
+        out.push('@R14');
+        out.push('AM=D-1');
+
+        // restore frame
         out.push('D=M');
         out.push('@THAT');
         out.push('M=D');
 
         out.push('@R14');
-        out.push('M=M-1');
-        out.push('A=M');
+        out.push('AM=M-1');
         out.push('D=M');
         out.push('@THIS');
         out.push('M=D');
 
         out.push('@R14');
-        out.push('M=M-1');
-        out.push('A=M');
+        out.push('AM=M-1');
         out.push('D=M');
         out.push('@ARG');
         out.push('M=D');
 
         out.push('@R14');
-        out.push('M=M-1');
-        out.push('A=M');
+        out.push('AM=M-1');
         out.push('D=M');
         out.push('@LCL');
         out.push('M=D');
 
-        // set SP to caller value (saved ARG address)
-        out.push('@R13');
-        out.push('D=M');
-        out.push('@SP');
-        out.push('M=D+1'); // +1 = to fake "push" return value
-
         // jump to retAddr
-        out.push('@R15');
+        out.push('@R13');
         out.push('A=M');
         out.push('0;JMP');
 
@@ -511,8 +472,9 @@ const vmlib = {
         out.push('D=A');
         out.push('@SP');
         out.push('M=D');
-        out.push('@Sys.init');
-        out.push('0;JMP');
+        out.push(vmlib.codeCall('Sys.init', 0));
+        //out.push('@Sys.init');
+        //out.push('0;JMP');
         return out.join('\n');
     },
 
