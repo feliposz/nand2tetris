@@ -1,0 +1,26 @@
+class Turtle {
+    field int x, y, angle;
+
+    constructor Turtle new() {
+        do reset();
+        return this;
+    }
+
+    method void dispose() {
+        do Memory.deAlloc(this);
+        return;
+    }
+
+    method void reset() {
+        let x = 0;
+        let y = 0;
+        let angle = 0;
+        return;
+    }
+
+    method void draw() {
+        do Screen.setColor(true);
+        do Screen.drawRectangle(256 + x, 128 + y, 256 + x + 5, 128 + y + 5);
+        return;
+    }
+}

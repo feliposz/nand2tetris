@@ -1,0 +1,80 @@
+class Logo {
+
+    field boolean quit, error;
+    field String cmd;
+    field Turtle turtle;
+
+    constructor Logo new() {
+        let turtle = Turtle.new();
+        return this;
+    }
+
+    method void dispose() {
+        do turtle.dispose();
+        do Memory.deAlloc(this);
+        return;
+    }
+
+    method void run() {
+        while (~quit) {
+            do promptUser();
+            do processCommand();
+        }
+        return;
+    }
+
+    method void promptUser() {
+        // Clear message/prompt area
+        do Screen.setColor(false);
+        do Screen.drawRectangle(0, 232, 511, 255);
+        if (error) {
+            do Output.moveCursor(21, 0);
+            do Output.printString("Unknown command: ");
+            do Output.printString(cmd);
+            do Output.printString(" (type HELP)");
+        }
+        if (~(cmd = null)) {
+            do cmd.dispose();
+            let cmd = null;
+        }
+        do Output.moveCursor(22, 0);
+        let cmd = Keyboard.readLine("?");
+        return;
+    }
+
+    method void processCommand() {
+        let error = true;
+        if (StringUtil.equals(cmd, "QUIT")) {
+            let quit = true;
+            let error = false;
+        }
+        if (StringUtil.equals(cmd, "HELP")) {
+            do showHelp();
+            let error = false;
+        }
+        if (StringUtil.equals(cmd, "CLEAR")) {
+            do clear();
+            let error = false;
+        }
+        return;
+    }
+
+    method void showHelp() {
+        do Screen.clearScreen();
+        do Output.moveCursor(0, 0);
+        do Output.printString("HELP"); do Output.println();
+        do Output.printString("----"); do Output.println();
+        do Output.println();
+        do Output.printString("HELP    Show this help screen"); do Output.println();
+        do Output.printString("CLEAR   Clear screen"); do Output.println();
+        do Output.printString("QUIT    Quit program");
+        return;
+    }
+
+    method void clear() {
+        do Screen.clearScreen();
+        do turtle.reset();
+        do turtle.draw();
+        return;
+    }
+}

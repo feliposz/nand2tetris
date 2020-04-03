@@ -1,0 +1,10 @@
+class Main {
+    function void main() {
+        var Logo logo;
+        do MathUtil.init();
+        let logo = Logo.new();
+        do logo.run();
+        do logo.dispose();
+        return;
+    }
+}

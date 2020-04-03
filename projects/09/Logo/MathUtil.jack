@@ -1,0 +1,135 @@
+class MathUtil {
+    static Array sinTable;
+
+    /** Initialize the MathUtil library. */
+    function void init() {
+        if (~(sinTable = null)) {
+            return;
+        }
+        let sinTable = Array.new(91);
+        let sinTable[0] = 0;
+        let sinTable[1] = 2;
+        let sinTable[2] = 3;
+        let sinTable[3] = 5;
+        let sinTable[4] = 7;
+        let sinTable[5] = 9;
+        let sinTable[6] = 10;
+        let sinTable[7] = 12;
+        let sinTable[8] = 14;
+        let sinTable[9] = 16;
+        let sinTable[10] = 17;
+        let sinTable[11] = 19;
+        let sinTable[12] = 21;
+        let sinTable[13] = 22;
+        let sinTable[14] = 24;
+        let sinTable[15] = 26;
+        let sinTable[16] = 28;
+        let sinTable[17] = 29;
+        let sinTable[18] = 31;
+        let sinTable[19] = 33;
+        let sinTable[20] = 34;
+        let sinTable[21] = 36;
+        let sinTable[22] = 37;
+        let sinTable[23] = 39;
+        let sinTable[24] = 41;
+        let sinTable[25] = 42;
+        let sinTable[26] = 44;
+        let sinTable[27] = 45;
+        let sinTable[28] = 47;
+        let sinTable[29] = 48;
+        let sinTable[30] = 50;
+        let sinTable[31] = 52;
+        let sinTable[32] = 53;
+        let sinTable[33] = 54;
+        let sinTable[34] = 56;
+        let sinTable[35] = 57;
+        let sinTable[36] = 59;
+        let sinTable[37] = 60;
+        let sinTable[38] = 62;
+        let sinTable[39] = 63;
+        let sinTable[40] = 64;
+        let sinTable[41] = 66;
+        let sinTable[42] = 67;
+        let sinTable[43] = 68;
+        let sinTable[44] = 69;
+        let sinTable[45] = 71;
+        let sinTable[46] = 72;
+        let sinTable[47] = 73;
+        let sinTable[48] = 74;
+        let sinTable[49] = 75;
+        let sinTable[50] = 77;
+        let sinTable[51] = 78;
+        let sinTable[52] = 79;
+        let sinTable[53] = 80;
+        let sinTable[54] = 81;
+        let sinTable[55] = 82;
+        let sinTable[56] = 83;
+        let sinTable[57] = 84;
+        let sinTable[58] = 85;
+        let sinTable[59] = 86;
+        let sinTable[60] = 87;
+        let sinTable[61] = 87;
+        let sinTable[62] = 88;
+        let sinTable[63] = 89;
+        let sinTable[64] = 90;
+        let sinTable[65] = 91;
+        let sinTable[66] = 91;
+        let sinTable[67] = 92;
+        let sinTable[68] = 93;
+        let sinTable[69] = 93;
+        let sinTable[70] = 94;
+        let sinTable[71] = 95;
+        let sinTable[72] = 95;
+        let sinTable[73] = 96;
+        let sinTable[74] = 96;
+        let sinTable[75] = 97;
+        let sinTable[76] = 97;
+        let sinTable[77] = 97;
+        let sinTable[78] = 98;
+        let sinTable[79] = 98;
+        let sinTable[80] = 98;
+        let sinTable[81] = 99;
+        let sinTable[82] = 99;
+        let sinTable[83] = 99;
+        let sinTable[84] = 99;
+        let sinTable[85] = 100;
+        let sinTable[86] = 100;
+        let sinTable[87] = 100;
+        let sinTable[88] = 100;
+        let sinTable[89] = 100;
+        let sinTable[90] = 100;
+        return;
+    }
+
+    /** Returns the sine of angle a in fixed-point (* 100). */
+    function int sin(int a) {
+        var int r;
+        // normalize angle between 0-360
+        while (a < 0) {
+            let a = a + 360;
+        }
+        while (a > 360) {
+            let a = a - 360;
+        }
+        if (a < 181) {
+            if (a < 91) {
+                let r = sinTable[a];
+            } else {
+                let r = sinTable[181-a];
+            }
+        } else {
+            if (a < 271) {
+                let r = -sinTable[a-181];
+            } else {
+                let r = -sinTable[361-a]; 
+            }
+        }
+        return r;
+    }
+
+    /** Returns the cosine of angle a in fixed-point (* 100). */
+    function int cos(int a) {
+        return MathUtil.sin(a+90);
+    }
+
+}
