@@ -16,12 +16,12 @@ class Logo {
     }
 
     method void run() {
+        do cmdClear();
         while (~quit) {
-            //do promptUser();
-            //do processCommand();
-            // TEST
-            do test();
+            do promptUser();
+            do processCommand();
         }
+        do StringUtil.printConstant("Goodbye! :D");
         return;
     }
 
@@ -31,9 +31,9 @@ class Logo {
         do Screen.drawRectangle(0, 232, 511, 255);
         if (error) {
             do Output.moveCursor(21, 0);
-            do Output.printString("Unknown command: ");
+            do StringUtil.printConstant("Unknown command: ");
             do Output.printString(cmd);
-            do Output.printString(" (type HELP)");
+            do StringUtil.printConstant(" (type HELP)");
         }
         if (~(cmd = null)) {
             do cmd.dispose();
@@ -46,34 +46,69 @@ class Logo {
 
     method void processCommand() {
         let error = true;
-        if (StringUtil.equals(cmd, "QUIT")) {
+        if (StringUtil.equalsConstant(cmd, "QUIT")) {
             let quit = true;
             let error = false;
         }
-        if (StringUtil.equals(cmd, "HELP")) {
-            do showHelp();
+        if (StringUtil.equalsConstant(cmd, "HELP")) {
+            do cmdHelp();
             let error = false;
         }
-        if (StringUtil.equals(cmd, "CLEAR")) {
-            do clear();
+        if (StringUtil.equalsConstant(cmd, "CLEAR")) {
+            do cmdClear();
+            let error = false;
+        }
+        if (StringUtil.equalsConstant(cmd, "TEST")) {
+            do test();
+            let error = false;
+        }
+        if (StringUtil.equalsConstant(cmd, "FD")) {
+            do cmdForward();
+            let error = false;
+        }
+        if (StringUtil.equalsConstant(cmd, "BK")) {
+            do cmdBack();
+            let error = false;
+        }
+        if (StringUtil.equalsConstant(cmd, "RT")) {
+            do cmdRight();
+            let error = false;
+        }
+        if (StringUtil.equalsConstant(cmd, "LT")) {
+            do cmdLeft();
+            let error = false;
+        }
+        if (StringUtil.equalsConstant(cmd, "PD")) {
+            do turtle.penDown();
+            let error = false;
+        }
+        if (StringUtil.equalsConstant(cmd, "PU")) {
+            do turtle.penUp();
             let error = false;
         }
         return;
     }
 
-    method void showHelp() {
+    method void cmdHelp() {
         do Screen.clearScreen();
         do Output.moveCursor(0, 0);
-        do Output.printString("HELP"); do Output.println();
-        do Output.printString("----"); do Output.println();
+        do StringUtil.printConstant("HELP"); do Output.println();
+        do StringUtil.printConstant("----"); do Output.println();
         do Output.println();
-        do Output.printString("HELP    Show this help screen"); do Output.println();
-        do Output.printString("CLEAR   Clear screen"); do Output.println();
-        do Output.printString("QUIT    Quit program");
+        do StringUtil.printConstant("HELP    Show this help screen"); do Output.println();
+        do StringUtil.printConstant("CLEAR   Clear screen"); do Output.println();
+        do StringUtil.printConstant("QUIT    Quit program"); do Output.println();
+        do Output.println();
+        do StringUtil.printConstant("FD      Move forward"); do Output.println();
+        do StringUtil.printConstant("BK      Move backwards"); do Output.println();
+        do StringUtil.printConstant("RT      Turn right"); do Output.println();
+        do StringUtil.printConstant("LT      Turn left"); do Output.println();
+        do StringUtil.printConstant("PD      Pen down (start drawing)"); do Output.println();
+        do StringUtil.printConstant("PU      Pen up (stop drawing)"); do Output.println();
         return;
     }
 
-    method void clear() {
+    method void cmdClear() {
         do Screen.clearScreen();
         do turtle.reset();
         do turtle.draw();
@@ -81,8 +116,7 @@ class Logo {
     }
 
     method void test() {
-        var int a;
-        var int count;
+        var int a, count, sides, i;
         do Screen.clearScreen();
         do turtle.reset();
         // draw a test pattern
@@ -93,20 +127,52 @@ class Logo {
         //     let count = count - 1;
         // }
         // do turtle._saveFrame();
-        while (a < 37) {
-            do turtle.draw();
-            do turtle.right(10);
-            do turtle.forward(10);
-            //do Keyboard.readChar();
-            let a = a + 1;
+        let sides = 3;
+        while (sides < 20) {
+            do cmdClear();
+            do Output.moveCursor(3, 0);
+            do Output.printInt(sides);
+            // do turtle.penUp();
+            // do turtle.setXY(-250 + (sides * 10), 0);
+            // do turtle.setH(0);
+            // do turtle.draw();
+            // do turtle.penDown();
+            let i = 0;
+            while (i < sides) {
+                do turtle.forward(300 / sides);
+                do turtle.draw();
+                do turtle.right(360 / sides);
+                do turtle.draw();
+                let a = a + (360 / sides);
+                let i = i + 1;
+            }
+            let sides = sides + 1;
+            do turtle._debug();
+            do Keyboard.readChar();
         }
-        let a = 0;
-        while (a < 37) {
-            do turtle.draw();
-            do turtle.left(10);
-            do turtle.forward(10);
-            //do Keyboard.readChar();
-            let a = a + 1;
+        if (false) {
+            do turtle.setXY(0, 0);
+            do turtle.setH(0);
+            let a = 0;
+            while (a < 37) {
+                do turtle.forward(10);
+                do turtle.draw();
+                do turtle.left(10);
+                //do Keyboard.readChar();
+                let a = a + 1;
+            }
+            do turtle.setXY(0, 0);
+            do turtle.setH(0);
+            let a = 0;
+            while (a < 10) {
+                do turtle.right(90);
+                do turtle.forward(20);
+                do turtle.draw();
+                do turtle.left(90);
+                do turtle.forward(20);
+                do turtle.draw();
+                let a = a + 1;
+            }
         }
         if (false) {
             do turtle.right(45);
@@ -119,4 +185,65 @@ class Logo {
         let quit = true;
         return;
     }
+
+    method void hello() {
+        do StringUtil.printConstant("Hello, world! ");
+        if (Keyboard.keyPressed() = 140) {
+            let quit = true;
+        }
+        return;
+    }
+
+    method void cmdForward() {
+        var int dist;
+        do Output.moveCursor(22, 0);
+        let dist = Keyboard.readInt("Move forward. Distance?");
+        if ((dist < 0) | (dist > 320)) {
+            do StringUtil.printConstant("Sorry, I can't move that much. :(");
+        } else {
+            do turtle.forward(dist);
+            do turtle.draw();
+        }
+        return;
+    }
+
+    method void cmdBack() {
+        var int dist;
+        do Output.moveCursor(22, 0);
+        let dist = Keyboard.readInt("Move back. Distance?");
+        if ((dist < 0) | (dist > 320)) {
+            do StringUtil.printConstant("Sorry, I can't move that much. :(");
+        } else {
+            do turtle.back(dist);
+            do turtle.draw();
+        }
+        return;
+    }
+
+    method void cmdRight() {
+        var int angle;
+        do Output.moveCursor(22, 0);
+        let angle = Keyboard.readInt("Turn right. Angle?");
+        if ((angle < 0) | (angle > 360)) {
+            do StringUtil.printConstant("Sorry, I can't turn that much. :(");
+        } else {
+            do turtle.right(angle);
+            do turtle.draw();
+        }
+        return;
+    }
+
+    method void cmdLeft() {
+        var int angle;
+        do Output.moveCursor(22, 0);
+        let angle = Keyboard.readInt("Turn left. Angle?");
+        if ((angle < 0) | (angle > 360)) {
+            do StringUtil.printConstant("Sorry, I can't turn that much. :(");
+        } else {
+            do turtle.left(angle);
+            do turtle.draw();
+        }
+        return;
+    }
+
 }

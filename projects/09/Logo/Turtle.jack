@@ -1,5 +1,6 @@
 class Turtle {
-    field int angle, xCur, yCur, xOld, yOld;
+    field int angle, xCur, yCur, xOld, yOld, xError, yError;
+    field boolean pen;
     field Array savedFrame;
 
     constructor Turtle new() {
@@ -15,17 +16,29 @@ class Turtle {
     }
 
     method void reset() {
+        var int i;
+        while (i < 42) {
+            let savedFrame[i] = 0;
+            let i = i + 1;
+        }
         let xCur = 256;
         let yCur = 128;
         let xOld = xCur;
         let yOld = yCur;
+        let xError = 0;
+        let yError = 0;
+        let pen = true;
         let angle = -90; // point north;
         return;
     }
 
     method void draw() {
         do _restoreFrame();
+        if (pen) {
+            do _safeDrawLine(xOld, yOld, xCur, yCur);
+        }
         do _saveFrame();
+        do _debug();
         do _drawBody();
         return;
     }
@@ -41,7 +54,7 @@ class Turtle {
             let y = 10;
         }
         if (y > 235) {
-            let y = 253;
+            let y = 235;
         }
         return ((x - 8) / 16) + ((y - 10) * 32);
     }
@@ -98,36 +111,125 @@ class Turtle {
         let fwdAngle = angle;
         let leftAngle = fwdAngle - 90;
         let rightAngle = fwdAngle + 90;
-        let x1 = xCur + (MathUtil.cos(fwdAngle) / 10);
-        let y1 = yCur + (MathUtil.sin(fwdAngle) / 10);
+        let x1 = xCur + (MathUtil.cos(fwdAngle) / 12);
+        let y1 = yCur + (MathUtil.sin(fwdAngle) / 12);
         let x2 = xCur + (MathUtil.cos(leftAngle) / 25);
         let y2 = yCur + (MathUtil.sin(leftAngle) / 25);
         let x3 = xCur + (MathUtil.cos(rightAngle) / 25);
         let y3 = yCur + (MathUtil.sin(rightAngle) / 25);
         do Screen.setColor(true);
-        do Screen.drawLine(x1, y1, x2, y2);
-        do Screen.drawLine(x2, y2, x3, y3);
-        do Screen.drawLine(x3, y3, x1, y1);
+        do _safeDrawLine(x1, y1, x2, y2);
+        do _safeDrawLine(x2, y2, x3, y3);
+        do _safeDrawLine(x3, y3, x1, y1);
         let xOld = xCur;
         let yOld = yCur;
         return;
     }
 
     method void forward(int dist) {
+        var int xDelta, yDelta, xDeltaOrig, yDeltaOrig;
         // TODO: handle possible overflow
-        let xCur = xCur + ((MathUtil.cos(angle) * dist) / 100);
-        let yCur = yCur + ((MathUtil.sin(angle) * dist) / 100);
+        let xDeltaOrig = MathUtil.cos(angle) * dist;
+        let yDeltaOrig = MathUtil.sin(angle) * dist;
+
+        // Try to compensate for truncation errors using the remainder of the division
+        // TODO: test if this is really helping...
+        let xDelta = xDeltaOrig / 100;
+        let yDelta = yDeltaOrig / 100;
+        let xError = xError + ((xDelta * 100) - xDeltaOrig);
+        let yError = yError + ((yDelta * 100) - yDeltaOrig);
+        if (xError > 99) {
+            let xDelta = xDelta - 1;
+            let xError = xError - 100;
+        }
+        if (xError < -99) {
+            let xDelta = xDelta + 1;
+            let xError = xError + 100;
+        }
+        if (yError > 99) {
+            let yDelta = yDelta - 1;
+            let yError = yError - 100;
+        }
+        if (yError < -99) {
+            let yDelta = yDelta + 1;
+            let yError = yError + 100;
+        }
+        let xCur = xCur + xDelta;
+        let yCur = yCur + yDelta;
+        return;
+    }
+
+    method void back(int dist) {
+        do forward(-dist);
         return;
     }
 
     method void left(int d) {
         let angle = angle - d;
+        if (angle < -180) {
+            let angle = angle + 360;
+        }
         return;
     }
 
     method void right(int d) {
         let angle = angle + d;
+        if (angle > 180) {
+            let angle = angle - 360;
+        }
         return;
     }
 
+    method void penDown() {
+        let pen = true;
+        return;
+    }
+
+    method void penUp() {
+        let pen = false;
+        return;
+    }
+
+    method void setXY(int x, int y) {
+        let xOld = xCur;
+        let yOld = yCur;
+        let xCur = (x + 256)&511;
+        let yCur = (y + 128)&255;
+        return;
+    }
+
+    method void setH(int a) {
+        let angle = a - 90;
+        return;
+    }
+
+    method void _safeDrawLine(int x1, int y1, int x2, int y2) {
+        if ((x1>-1) & (x1<512) & (y1>-1) & (y1<256) &
+            (x2>-1) & (x2<512) & (y2>-1) & (y2<256))
+        {
+            do Screen.setColor(true);
+            do Screen.drawLine(x1, y1, x2, y2);
+        } else {
+            // TODO: Calculate intercept with border and clamp line there
+        }
+        return;
+    }
+
+    method void _debug() {
+        do Output.moveCursor(0, 0);
+        do StringUtil.printConstant("Pos: x=");
+        do Output.printInt(xCur-256);
+        do StringUtil.printConstant(" y=");
+        do Output.printInt(yCur-128);
+        do StringUtil.printConstant(" angle=");
+        do Output.printInt(angle+90);
+        do StringUtil.printConstant("      ");
+        do Output.println();
+        do StringUtil.printConstant("Err: x=");
+        do Output.printInt(xError);
+        do StringUtil.printConstant(" y=");
+        do Output.printInt(yError);
+        do StringUtil.printConstant("      ");
+        return;
+    }
 }

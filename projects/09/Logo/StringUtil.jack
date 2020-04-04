@@ -14,4 +14,17 @@ class StringUtil {
         }
         return true;
     }
+
+    function boolean equalsConstant(String s1, String s2) {
+        var boolean result;
+        let result = StringUtil.equals(s1, s2);
+        do s2.dispose();
+        return result;
+    }
+
+    function void printConstant(String s) {
+        do Output.printString(s);
+        do s.dispose();
+        return;
+    }
 }
