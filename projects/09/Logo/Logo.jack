@@ -1,7 +1,8 @@
 class Logo {
 
     field boolean quit, error;
-    field String cmd;
+    field int arg;
+    field String input, cmd, message;
     field Turtle turtle;
 
     constructor Logo new() {
@@ -19,6 +20,7 @@ class Logo {
         do cmdClear();
         while (~quit) {
             do promptUser();
+            do parseInput();
             do processCommand();
         }
         do StringUtil.printConstant("Goodbye! :D");
@@ -31,16 +33,64 @@ class Logo {
         do Screen.drawRectangle(0, 232, 511, 255);
         if (error) {
             do Output.moveCursor(21, 0);
-            do StringUtil.printConstant("Unknown command: ");
-            do Output.printString(cmd);
-            do StringUtil.printConstant(" (type HELP)");
-        }
-        if (~(cmd = null)) {
-            do cmd.dispose();
-            let cmd = null;
+            if (message) {
+                do Output.printString(message);
+                do message.dispose();
+                let message = null;
+            }
         }
         do Output.moveCursor(22, 0);
-        let cmd = Keyboard.readLine("?");
+        let input = Keyboard.readLine("?");
+        return;
+    }
+
+    method void parseInput() {
+        var int len, i, tokens, tmpArg, sign;
+        var boolean break;
+        var String tmpCmd;
+
+        let len = input.length();
+        let tmpCmd = String.new(len);
+
+        while ((i < len) & ~break) {
+            if ((input.charAt(i) > 64) & (input.charAt(i) < 91)) { // letter A-Z
+                do tmpCmd.appendChar(input.charAt(i));
+            } else {
+                if (input.charAt(i) = 32) {
+                    // skip space
+                } else {
+                    // invalid character
+                    let i = i - 1;
+                    let break = true;
+                }
+            }
+            let i = i + 1;
+        }
+
+        if (i < len) {
+            if (input.charAt(i) = 45) { // minus sign
+                let sign = -1;
+                let i = i + 1;
+            } else {
+                let sign = 1;
+            }
+            let break = false;
+            while ((i < len) & ~break) {
+                if ((input.charAt(i) > 47) & (input.charAt(i) < 58)) { // digit 0-9
+                    let tmpArg = (tmpArg * 10) + (input.charAt(i) - 48);
+                } else {
+                    // invalid character
+                    let break = true;
+                }
+                let i = i + 1;
+            }
+            let tmpArg = tmpArg * sign;
+        }
+
+        do input.dispose();
+        let input = null;
+        let cmd = tmpCmd;
+        let arg = tmpArg;
         return;
     }
 
@@ -52,31 +102,24 @@ class Logo {
         }
         if (StringUtil.equalsConstant(cmd, "HELP")) {
             do cmdHelp();
-            let error = false;
         }
         if (StringUtil.equalsConstant(cmd, "CLEAR")) {
             do cmdClear();
-            let error = false;
         }
         if (StringUtil.equalsConstant(cmd, "TEST")) {
             do test();
-            let error = false;
         }
         if (StringUtil.equalsConstant(cmd, "FD")) {
-            do cmdForward();
-            let error = false;
+            do cmdForward(arg);
         }
         if (StringUtil.equalsConstant(cmd, "BK")) {
-            do cmdBack();
-            let error = false;
+            do cmdBack(arg);
         }
         if (StringUtil.equalsConstant(cmd, "RT")) {
-            do cmdRight();
-            let error = false;
+            do cmdRight(arg);
         }
         if (StringUtil.equalsConstant(cmd, "LT")) {
-            do cmdLeft();
-            let error = false;
+            do cmdLeft(arg);
         }
         if (StringUtil.equalsConstant(cmd, "PD")) {
             do turtle.penDown();
@@ -85,6 +128,17 @@ class Logo {
         if (StringUtil.equalsConstant(cmd, "PU")) {
             do turtle.penUp();
             let error = false;
+        }
+        // HACK: Since this method messes with input/cmd this has to be last for now...
+        if (StringUtil.equalsConstant(cmd, "DEMO")) {
+            do runDemo();
+        }
+        if (error) {
+            let message = "Unknown command (type HELP to learn commands)";
+        }
+        if (cmd) {
+            do cmd.dispose();
+            let cmd = null;
         }
         return;
     }
@@ -95,16 +149,22 @@ class Logo {
         do StringUtil.printConstant("HELP"); do Output.println();
         do StringUtil.printConstant("----"); do Output.println();
         do Output.println();
-        do StringUtil.printConstant("HELP    Show this help screen"); do Output.println();
-        do StringUtil.printConstant("CLEAR   Clear screen"); do Output.println();
-        do StringUtil.printConstant("QUIT    Quit program"); do Output.println();
+        do StringUtil.printConstant("HELP          Show this help screen"); do Output.println();
+        do StringUtil.printConstant("DEMO          Demonstration mode"); do Output.println();
+        do StringUtil.printConstant("CLEAR         Clear screen"); do Output.println();
+        do StringUtil.printConstant("QUIT          Quit program"); do Output.println();
         do Output.println();
-        do StringUtil.printConstant("FD      Move forward"); do Output.println();
-        do StringUtil.printConstant("BK      Move backwards"); do Output.println();
-        do StringUtil.printConstant("RT      Turn right"); do Output.println();
-        do StringUtil.printConstant("LT      Turn left"); do Output.println();
-        do StringUtil.printConstant("PD      Pen down (start drawing)"); do Output.println();
-        do StringUtil.printConstant("PU      Pen up (stop drawing)"); do Output.println();
+        do StringUtil.printConstant("FD distance   Move forward"); do Output.println();
+        do StringUtil.printConstant("BK distance   Move backwards"); do Output.println();
+        do StringUtil.printConstant("RT angle      Turn right"); do Output.println();
+        do StringUtil.printConstant("LT angle      Turn left"); do Output.println();
+        do StringUtil.printConstant("PD            Pen down (start drawing)"); do Output.println();
+        do StringUtil.printConstant("PU            Pen up (stop drawing)"); do Output.println();
+        do Output.println();
+        do StringUtil.printConstant("Press any key to continue..."); do Output.println();
+        do Keyboard.readChar();
+        do cmdClear();
+        let error = false;
         return;
     }
 
@@ -112,6 +172,7 @@ class Logo {
         do Screen.clearScreen();
         do turtle.reset();
         do turtle.draw();
+        let error = false;
         return;
     }
 
@@ -183,6 +244,7 @@ class Logo {
             do turtle.draw();
         }
         let quit = true;
+        let error = false;
         return;
     }
 
@@ -194,55 +256,122 @@ class Logo {
         return;
     }
 
-    method void cmdForward() {
-        var int dist;
-        do Output.moveCursor(22, 0);
-        let dist = Keyboard.readInt("Move forward. Distance?");
+    method void cmdForward(int dist) {
         if ((dist < 0) | (dist > 320)) {
-            do StringUtil.printConstant("Sorry, I can't move that much. :(");
+            let message = "Sorry, I can't move that much. :(";
+            let error = true;
         } else {
             do turtle.forward(dist);
             do turtle.draw();
+            let error = false;
         }
         return;
     }
 
-    method void cmdBack() {
-        var int dist;
-        do Output.moveCursor(22, 0);
-        let dist = Keyboard.readInt("Move back. Distance?");
+    method void cmdBack(int dist) {
         if ((dist < 0) | (dist > 320)) {
-            do StringUtil.printConstant("Sorry, I can't move that much. :(");
+            let message = "Sorry, I can't move that much. :(";
+            let error = true;
         } else {
             do turtle.back(dist);
             do turtle.draw();
+            let error = false;
         }
         return;
     }
 
-    method void cmdRight() {
-        var int angle;
-        do Output.moveCursor(22, 0);
-        let angle = Keyboard.readInt("Turn right. Angle?");
+    method void cmdRight(int angle) {
         if ((angle < 0) | (angle > 360)) {
-            do StringUtil.printConstant("Sorry, I can't turn that much. :(");
+            let message = "Sorry, I can't turn that much. :(";
+            let error = true;
         } else {
             do turtle.right(angle);
             do turtle.draw();
+            let error = false;
         }
         return;
     }
 
-    method void cmdLeft() {
-        var int angle;
-        do Output.moveCursor(22, 0);
-        let angle = Keyboard.readInt("Turn left. Angle?");
+    method void cmdLeft(int angle) {
         if ((angle < 0) | (angle > 360)) {
-            do StringUtil.printConstant("Sorry, I can't turn that much. :(");
+            let message = "Sorry, I can't turn that much. :(";
+            let error = true;
         } else {
             do turtle.left(angle);
             do turtle.draw();
+            let error = false;
         }
+        return;
+    }
+
+    method void runDemo() {
+        var Array demo;
+        var int size, i;
+        let size = 37;
+        let demo = Array.new(size);
+        let demo[0] = "CLEAR";
+        let demo[1] = "LT 90";
+        let demo[2] = "FD 150";
+        let demo[3] = "RT 90";
+        let demo[4] = "FD 100";
+        let demo[5] = "RT 90";
+        let demo[6] = "FD 25";
+        let demo[7] = "RT 90";
+        let demo[8] = "FD 75";
+        let demo[9] = "LT 90";
+        let demo[10] = "FD 75";
+        let demo[11] = "RT 90";
+        let demo[12] = "FD 25";
+        let demo[13] = "BK 50";
+        let demo[14] = "LT 90";
+        let demo[15] = "FD 50";
+        let demo[16] = "RT 90";
+        let demo[17] = "FD 50";
+        let demo[18] = "LT 90";
+        let demo[19] = "FD 25";
+        let demo[20] = "RT 90";
+        let demo[21] = "FD 25";
+        let demo[22] = "RT 90";
+        let demo[23] = "FD 75";
+        let demo[24] = "LT 90";
+        let demo[25] = "FD 25";
+        let demo[26] = "LT 90";
+        let demo[27] = "FD 100";
+        let demo[28] = "LT 90";
+        let demo[29] = "FD 100";
+        let demo[30] = "LT 90";
+        let demo[31] = "FD 50";
+        let demo[32] = "BK 100";
+        let demo[33] = "LT 90";
+        let demo[34] = "FD 50";
+        let demo[35] = "RT 90";
+        let demo[36] = "FD 50";
+
+        do Output.moveCursor(0, 0);
+        while (i < size) {
+            let input = demo[i];
+            if (i > 0) {
+                if (i < 19) {
+                    do Output.moveCursor(i, 0);
+                } else {
+                    do Output.moveCursor(i - 19, 58);
+                }
+                do Output.printString(input);
+                do Sys.wait(500);
+            }
+            do parseInput();
+            do processCommand();
+            if (i = 0) {
+                do Output.moveCursor(0, 0);
+                do StringUtil.printConstant("CLEAR");
+                do Output.println();
+                do Sys.wait(500);
+            }
+            let i = i + 1;
+        }
+
+        do demo.dispose();
+        let error = false;
         return;
     }
 

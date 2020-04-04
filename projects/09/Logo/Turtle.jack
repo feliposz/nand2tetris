@@ -38,7 +38,6 @@ class Turtle {
             do _safeDrawLine(xOld, yOld, xCur, yCur);
         }
         do _saveFrame();
-        do _debug();
         do _drawBody();
         return;
     }

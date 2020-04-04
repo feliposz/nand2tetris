@@ -1,7 +1,6 @@
 class Main {
     function void main() {
         var Logo logo;
-        var int Fn;
         do MathUtil.init();
         let logo = Logo.new();
         do logo.run();
