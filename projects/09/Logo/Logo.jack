@@ -1,8 +1,7 @@
 class Logo {
 
     field boolean quit, error;
-    field int arg;
-    field String input, cmd, message;
+    field String message;
     field Turtle turtle;
 
     constructor Logo new() {
@@ -17,17 +16,18 @@ class Logo {
     }
 
     method void run() {
+        var String input;
         do cmdClear();
         while (~quit) {
-            do promptUser();
-            do parseInput();
-            do processCommand();
+            let input = promptUser();
+            do parseInput(input);
+            do input.dispose();
         }
         do StringUtil.printConstant("Goodbye! :D");
         return;
     }
 
-    method void promptUser() {
+    method String promptUser() {
         // Clear message/prompt area
         do Screen.setColor(false);
         do Screen.drawRectangle(0, 232, 511, 255);
@@ -40,61 +40,97 @@ class Logo {
             }
         }
         do Output.moveCursor(22, 0);
-        let input = Keyboard.readLine("?");
-        return;
+        return Keyboard.readLine("?");
     }
 
-    method void parseInput() {
-        var int len, i, tokens, tmpArg, sign;
+    method void parseInput(String input) {
+        var int len, i, tokens, arg, sign;
         var boolean break;
-        var String tmpCmd;
+        var String cmd;
 
         let len = input.length();
-        let tmpCmd = String.new(len);
 
-        while ((i < len) & ~break) {
-            if ((input.charAt(i) > 64) & (input.charAt(i) < 91)) { // letter A-Z
-                do tmpCmd.appendChar(input.charAt(i));
-            } else {
-                if (input.charAt(i) = 32) {
-                    // skip space
-                } else {
-                    // invalid character
-                    let i = i - 1;
-                    let break = true;
-                }
-            }
-            let i = i + 1;
-        }
+        // allow multiple commands per line
+        while (i < len) {
 
-        if (i < len) {
-            if (input.charAt(i) = 45) { // minus sign
-                let sign = -1;
-                let i = i + 1;
-            } else {
-                let sign = 1;
-            }
+            let cmd = String.new(len-i);
+
+            // skip space
             let break = false;
             while ((i < len) & ~break) {
-                if ((input.charAt(i) > 47) & (input.charAt(i) < 58)) { // digit 0-9
-                    let tmpArg = (tmpArg * 10) + (input.charAt(i) - 48);
+                if (input.charAt(i) = 32) {
+                    let i = i + 1;
+                } else {
+                    let break = true;
+                }
+            }
+
+            // get command
+            let break = false;
+            while ((i < len) & ~break) {
+                if ((input.charAt(i) > 64) & (input.charAt(i) < 91)) { // letter A-Z
+                    do cmd.appendChar(input.charAt(i));
+                    let i = i + 1;
                 } else {
                     // invalid character
                     let break = true;
                 }
-                let i = i + 1;
             }
-            let tmpArg = tmpArg * sign;
-        }
 
-        do input.dispose();
-        let input = null;
-        let cmd = tmpCmd;
-        let arg = tmpArg;
+            // skip space
+            let break = false;
+            while ((i < len) & ~break) {
+                if (input.charAt(i) = 32) {
+                    let i = i + 1;
+                } else {
+                    let break = true;
+                }
+            }
+
+            // parse numeric argument
+            let arg = 0;
+            let break = false;
+            if (i < len) {
+                if (input.charAt(i) = 45) { // minus sign
+                    let sign = -1;
+                    let i = i + 1;
+                } else {
+                    let sign = 1;
+                }
+                while ((i < len) & ~break) {
+                    if ((input.charAt(i) > 47) & (input.charAt(i) < 58)) { // digit 0-9
+                        let arg = (arg * 10) + (input.charAt(i) - 48);
+                        let i = i + 1;
+                    } else {
+                        // invalid digit
+                        let break = true;
+                    }
+                }
+                let arg = arg * sign;
+            }
+
+            do processCommand(cmd, arg);
+
+            //debug
+            // do StringUtil.printConstant("i=");
+            // do Output.printInt(i);
+            // do StringUtil.printConstant(" cmd=");
+            // do Output.printString(cmd);
+            // do StringUtil.printConstant(" arg=");
+            // do Output.printInt(arg);
+            // do Output.println();
+
+            do cmd.dispose();
+
+            // skip rest of line on error
+            if (error) {
+                let i = len;
+            }
+        }
         return;
     }
 
-    method void processCommand() {
+    method void processCommand(String cmd, int arg) {
         let error = true;
         if (StringUtil.equalsConstant(cmd, "QUIT")) {
             let quit = true;
@@ -103,7 +139,7 @@ class Logo {
         if (StringUtil.equalsConstant(cmd, "HELP")) {
             do cmdHelp();
         }
-        if (StringUtil.equalsConstant(cmd, "CLEAR")) {
+        if (StringUtil.equalsConstant(cmd, "CS")) {
             do cmdClear();
         }
         if (StringUtil.equalsConstant(cmd, "TEST")) {
@@ -136,10 +172,6 @@ class Logo {
         if (error) {
             let message = "Unknown command (type HELP to learn commands)";
         }
-        if (cmd) {
-            do cmd.dispose();
-            let cmd = null;
-        }
         return;
     }
 
@@ -151,9 +183,9 @@ class Logo {
         do Output.println();
         do StringUtil.printConstant("HELP          Show this help screen"); do Output.println();
         do StringUtil.printConstant("DEMO          Demonstration mode"); do Output.println();
-        do StringUtil.printConstant("CLEAR         Clear screen"); do Output.println();
         do StringUtil.printConstant("QUIT          Quit program"); do Output.println();
         do Output.println();
+        do StringUtil.printConstant("CS            Clear screen"); do Output.println();
         do StringUtil.printConstant("FD distance   Move forward"); do Output.println();
         do StringUtil.printConstant("BK distance   Move backwards"); do Output.println();
         do StringUtil.printConstant("RT angle      Turn right"); do Output.println();
@@ -306,12 +338,13 @@ class Logo {
 
     method void runDemo() {
         var Array demo;
+        var String input;
         var int size, i;
         let size = 37;
         let demo = Array.new(size);
-        let demo[0] = "CLEAR";
+        let demo[0] = "CS";
         let demo[1] = "LT 90";
-        let demo[2] = "FD 150";
+        let demo[2] = "FD 100";
         let demo[3] = "RT 90";
         let demo[4] = "FD 100";
         let demo[5] = "RT 90";
@@ -319,7 +352,7 @@ class Logo {
         let demo[7] = "RT 90";
         let demo[8] = "FD 75";
         let demo[9] = "LT 90";
-        let demo[10] = "FD 75";
+        let demo[10] = "FD 25";
         let demo[11] = "RT 90";
         let demo[12] = "FD 25";
         let demo[13] = "BK 50";
@@ -359,14 +392,13 @@ class Logo {
                 do Output.printString(input);
                 do Sys.wait(500);
             }
-            do parseInput();
-            do processCommand();
-            if (i = 0) {
+            do parseInput(input);
+            if (i = 0) { // wait to print CLEAR command only after clearscreen
                 do Output.moveCursor(0, 0);
-                do StringUtil.printConstant("CLEAR");
-                do Output.println();
+                do Output.printString(input);
                 do Sys.wait(500);
             }
+            do input.dispose();
             let i = i + 1;
         }
 
