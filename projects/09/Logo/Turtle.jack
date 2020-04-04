@@ -1,26 +1,133 @@
 class Turtle {
-    field int x, y, angle;
+    field int angle, xCur, yCur, xOld, yOld;
+    field Array savedFrame;
 
     constructor Turtle new() {
+        let savedFrame = Array.new(42); // 42 (10 lines above + 10 below + 1 padding) * (2 columns, 16-bit each)
         do reset();
         return this;
     }
 
     method void dispose() {
+        do Memory.deAlloc(savedFrame);
         do Memory.deAlloc(this);
         return;
     }
 
     method void reset() {
-        let x = 0;
-        let y = 0;
-        let angle = 0;
+        let xCur = 256;
+        let yCur = 128;
+        let xOld = xCur;
+        let yOld = yCur;
+        let angle = -90; // point north;
         return;
     }
 
     method void draw() {
-        do Screen.setColor(true);
-        do Screen.drawRectangle(256 + x, 128 + y, 256 + x + 5, 128 + y + 5);
+        do _restoreFrame();
+        do _saveFrame();
+        do _drawBody();
         return;
     }
+
+    method int _savedFrameTopLeftCorner(int x, int y) {
+        if (x < 8) {
+            let x = 8;
+        }
+        if (x > 501) {
+            let x = 501;
+        }
+        if (y < 10) {
+            let y = 10;
+        }
+        if (y > 235) {
+            let y = 253;
+        }
+        return ((x - 8) / 16) + ((y - 10) * 32);
+    }
+
+    method void _saveFrame() {
+        var int i;
+        var int corner;
+        let corner = _savedFrameTopLeftCorner(xCur, yCur);
+        while (i < 42) {
+            let savedFrame[i] = Memory.peek(16384 + corner);
+            let savedFrame[i+1] = Memory.peek(16384 + corner + 1);
+            let corner = corner + 32;
+            let i = i + 2;
+        }
+        // debug
+        // if (false) {
+        //     let i = 0;
+        //     let corner = _savedFrameTopLeftCorner(xCur, yCur);
+        //     while (i < 42) {
+        //         do Memory.poke(16384 + corner, ~savedFrame[i]);
+        //         do Memory.poke(16384 + corner + 1, ~savedFrame[i+1]);
+        //         let corner = corner + 32;
+        //         let i = i + 2;
+        //     }
+        //     do Sys.wait(200);
+        //     let i = 0;
+        //     let corner = _savedFrameTopLeftCorner(xCur, yCur);
+        //     while (i < 42) {
+        //         do Memory.poke(16384 + corner, savedFrame[i]);
+        //         do Memory.poke(16384 + corner + 1, savedFrame[i+1]);
+        //         let corner = corner + 32;
+        //         let i = i + 2;
+        //     }
+        // }
+        return;
+    }
+
+    method void _restoreFrame() {
+        var int i;
+        var int corner;
+        let corner = _savedFrameTopLeftCorner(xOld, yOld);
+        while (i < 42) {
+            do Memory.poke(16384 + corner, savedFrame[i]);
+            do Memory.poke(16384 + corner + 1, savedFrame[i+1]);
+            let corner = corner + 32;
+            let i = i + 2;
+        }
+        return;
+    }
+
+    method void _drawBody() {
+        var int x1, y1, x2, y2, x3, y3;
+        var int fwdAngle, leftAngle, rightAngle;
+        let fwdAngle = angle;
+        let leftAngle = fwdAngle - 90;
+        let rightAngle = fwdAngle + 90;
+        let x1 = xCur + (MathUtil.cos(fwdAngle) / 10);
+        let y1 = yCur + (MathUtil.sin(fwdAngle) / 10);
+        let x2 = xCur + (MathUtil.cos(leftAngle) / 25);
+        let y2 = yCur + (MathUtil.sin(leftAngle) / 25);
+        let x3 = xCur + (MathUtil.cos(rightAngle) / 25);
+        let y3 = yCur + (MathUtil.sin(rightAngle) / 25);
+        do Screen.setColor(true);
+        do Screen.drawLine(x1, y1, x2, y2);
+        do Screen.drawLine(x2, y2, x3, y3);
+        do Screen.drawLine(x3, y3, x1, y1);
+        let xOld = xCur;
+        let yOld = yCur;
+        return;
+    }
+
+    method void forward(int dist) {
+        // TODO: handle possible overflow
+        let xCur = xCur + ((MathUtil.cos(angle) * dist) / 100);
+        let yCur = yCur + ((MathUtil.sin(angle) * dist) / 100);
+        return;
+    }
+
+    method void left(int d) {
+        let angle = angle - d;
+        return;
+    }
+
+    method void right(int d) {
+        let angle = angle + d;
+        return;
+    }
+
 }

@@ -17,8 +17,10 @@ class Logo {
 
     method void run() {
         while (~quit) {
-            do promptUser();
-            do processCommand();
+            //do promptUser();
+            //do processCommand();
+            // TEST
+            do test();
         }
         return;
     }
@@ -75,6 +77,46 @@ class Logo {
         do Screen.clearScreen();
         do turtle.reset();
         do turtle.draw();
+        return;
+    }
+
+    method void test() {
+        var int a;
+        var int count;
+        do Screen.clearScreen();
+        do turtle.reset();
+        // draw a test pattern
+        // do Output.moveCursor(0, 0);
+        // let count = 23 * 64;
+        // while (count > 0) {
+        //     do Output.printChar(65 + (count&31));
+        //     let count = count - 1;
+        // }
+        // do turtle._saveFrame();
+        while (a < 37) {
+            do turtle.draw();
+            do turtle.right(10);
+            do turtle.forward(10);
+            //do Keyboard.readChar();
+            let a = a + 1;
+        }
+        let a = 0;
+        while (a < 37) {
+            do turtle.draw();
+            do turtle.left(10);
+            do turtle.forward(10);
+            //do Keyboard.readChar();
+            let a = a + 1;
+        }
+        if (false) {
+            do turtle.right(45);
+            do turtle.forward(50);
+            do turtle.draw();
+            do turtle.left(90);
+            do turtle.forward(50);
+            do turtle.draw();
+        }
+        let quit = true;
         return;
     }
 }
