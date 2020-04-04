@@ -115,13 +115,13 @@ class MathUtil {
             if (a < 91) {
                 let r = sinTable[a];
             } else {
-                let r = sinTable[181-a];
+                let r = sinTable[180-a];
             }
         } else {
             if (a < 271) {
-                let r = -sinTable[a-181];
+                let r = -sinTable[a-180];
             } else {
-                let r = -sinTable[361-a]; 
+                let r = -sinTable[360-a]; 
             }
         }
         return r;
