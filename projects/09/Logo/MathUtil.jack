@@ -121,7 +121,7 @@ class MathUtil {
             if (a < 271) {
                 let r = -sinTable[a-180];
             } else {
-                let r = -sinTable[360-a]; 
+                let r = -sinTable[360-a];
             }
         }
         return r;

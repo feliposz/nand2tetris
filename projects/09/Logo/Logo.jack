@@ -23,7 +23,8 @@ class Logo {
             do parseInput(input);
             do input.dispose();
         }
-        do StringUtil.printConstant("Goodbye! :D");
+        do Output.moveCursor(21, 0);
+        do StringUtil.printConstant("Goodbye! :D ");
         return;
     }
 
@@ -55,15 +56,7 @@ class Logo {
 
             let cmd = String.new(len-i);
 
-            // skip space
-            let break = false;
-            while ((i < len) & ~break) {
-                if (input.charAt(i) = 32) {
-                    let i = i + 1;
-                } else {
-                    let break = true;
-                }
-            }
+            let i = skipSpace(input, len, i);
 
             // get command
             let break = false;
@@ -72,20 +65,12 @@ class Logo {
                     do cmd.appendChar(input.charAt(i));
                     let i = i + 1;
                 } else {
-                    // invalid character
+                    // not a letter
                     let break = true;
                 }
             }
 
-            // skip space
-            let break = false;
-            while ((i < len) & ~break) {
-                if (input.charAt(i) = 32) {
-                    let i = i + 1;
-                } else {
-                    let break = true;
-                }
-            }
+            let i = skipSpace(input, len, i);
 
             // parse numeric argument
             let arg = 0;
@@ -102,7 +87,7 @@ class Logo {
                         let arg = (arg * 10) + (input.charAt(i) - 48);
                         let i = i + 1;
                     } else {
-                        // invalid digit
+                        // not a digit
                         let break = true;
                     }
                 }
@@ -112,26 +97,31 @@ class Logo {
             if (StringUtil.equalsConstant(cmd, "REPEAT")) {
                 let i = processRepeat(arg, input, i);
             } else {
-                do processCommand(cmd, arg);
+                if (cmd.length() > 0) {
+                    do processCommand(cmd, arg);
+                }
             }
-
-            //debug
-            // do StringUtil.printConstant("i=");
-            // do Output.printInt(i);
-            // do StringUtil.printConstant(" cmd=");
-            // do Output.printString(cmd);
-            // do StringUtil.printConstant(" arg=");
-            // do Output.printInt(arg);
-            // do Output.println();
 
             do cmd.dispose();
 
-            // skip rest of line on error
+            // stop processing command on error
             if (error) {
                 let i = len;
             }
         }
         return;
+    }
+
+    method int skipSpace(String input, int len, int i) {
+        var boolean break;
+        while ((i < len) & ~break) {
+            if (input.charAt(i) = 32) {
+                let i = i + 1;
+            } else {
+                let break = true;
+            }
+        }
+        return i;
     }
 
     method int processRepeat(int times, String input, int i) {
@@ -142,17 +132,9 @@ class Logo {
         let len = input.length();
         let body = String.new(len - i);
 
-        // skip space
-        let break = false;
-        while ((i < len) & ~break) {
-            if (input.charAt(i) = 32) {
-                let i = i + 1;
-            } else {
-                let break = true;
-            }
-        }
+        let i = skipSpace(input, len, i);
 
-        // parse repeat body
+        // extract repeat body
         if (input.charAt(i) = 91) { // skip first [
             let i = i + 1;
             let brackets = brackets + 1;
@@ -167,21 +149,22 @@ class Logo {
                 if (brackets > 0) { // skip last ]
                     do body.appendChar(input.charAt(i));
                 }
-            let i = i + 1;
+                let i = i + 1;
             }
         } else {
             let error = true;
-            let message = "expected [";
+            let message = "expected [ at beginning of repeat sequence";
         }
 
         if (brackets > 0) {
             let error = true;
-            let message = "expected ]";
+            let message = "expected ] at end of repeat sequence";
         } else {
+            // execute repeat body
             while (times > 0) {
                 do parseInput(body);
                 if (error) {
-                    let times = 0;
+                    let times = 0; // skip processing body on error found
                 } else {
                     let times = times - 1;
                 }
@@ -202,13 +185,10 @@ class Logo {
             do cmdHelp();
         }
         if (StringUtil.equalsConstant(cmd, "DEMO")) {
-            do runDemo();
+            do cmdDemo(arg);
         }
         if (StringUtil.equalsConstant(cmd, "CS")) {
             do cmdClear();
-        }
-        if (StringUtil.equalsConstant(cmd, "TEST")) {
-            do test();
         }
         if (StringUtil.equalsConstant(cmd, "FD")) {
             do cmdForward(arg);
@@ -230,6 +210,7 @@ class Logo {
             do turtle.penUp();
             let error = false;
         }
+        // TODO: Implement more logo commands (HOME, HIDETURTLE, etc.)
         if (error) {
             let message = "Unknown command (type HELP to learn commands)";
         }
@@ -243,8 +224,8 @@ class Logo {
         do StringUtil.printConstant("----"); do Output.println();
         do Output.println();
         do StringUtil.printConstant("HELP          Show this help screen"); do Output.println();
-        do StringUtil.printConstant("DEMO          Demonstration mode"); do Output.println();
         do StringUtil.printConstant("QUIT          Quit program"); do Output.println();
+        do StringUtil.printConstant("DEMO id       Demonstration mode (where id = 0 to 3)"); do Output.println();
         do Output.println();
         do StringUtil.printConstant("CS            Clear screen"); do Output.println();
         do StringUtil.printConstant("FD distance   Move forward"); do Output.println();
@@ -272,86 +253,6 @@ class Logo {
         do turtle.reset();
         do turtle.draw();
         let error = false;
-        return;
-    }
-
-    method void test() {
-        var int a, count, sides, i;
-        do Screen.clearScreen();
-        do turtle.reset();
-        // draw a test pattern
-        // do Output.moveCursor(0, 0);
-        // let count = 23 * 64;
-        // while (count > 0) {
-        //     do Output.printChar(65 + (count&31));
-        //     let count = count - 1;
-        // }
-        // do turtle._saveFrame();
-        let sides = 3;
-        while (sides < 20) {
-            do cmdClear();
-            do Output.moveCursor(3, 0);
-            do Output.printInt(sides);
-            // do turtle.penUp();
-            // do turtle.setXY(-250 + (sides * 10), 0);
-            // do turtle.setH(0);
-            // do turtle.draw();
-            // do turtle.penDown();
-            let i = 0;
-            while (i < sides) {
-                do turtle.forward(300 / sides);
-                do turtle.draw();
-                do turtle.right(360 / sides);
-                do turtle.draw();
-                let a = a + (360 / sides);
-                let i = i + 1;
-            }
-            let sides = sides + 1;
-            do turtle._debug();
-            do Keyboard.readChar();
-        }
-        if (false) {
-            do turtle.setXY(0, 0);
-            do turtle.setH(0);
-            let a = 0;
-            while (a < 37) {
-                do turtle.forward(10);
-                do turtle.draw();
-                do turtle.left(10);
-                //do Keyboard.readChar();
-                let a = a + 1;
-            }
-            do turtle.setXY(0, 0);
-            do turtle.setH(0);
-            let a = 0;
-            while (a < 10) {
-                do turtle.right(90);
-                do turtle.forward(20);
-                do turtle.draw();
-                do turtle.left(90);
-                do turtle.forward(20);
-                do turtle.draw();
-                let a = a + 1;
-            }
-        }
-        if (false) {
-            do turtle.right(45);
-            do turtle.forward(50);
-            do turtle.draw();
-            do turtle.left(90);
-            do turtle.forward(50);
-            do turtle.draw();
-        }
-        let quit = true;
-        let error = false;
-        return;
-    }
-
-    method void hello() {
-        do StringUtil.printConstant("Hello, world! ");
-        if (Keyboard.keyPressed() = 140) {
-            let quit = true;
-        }
         return;
     }
 
@@ -403,49 +304,81 @@ class Logo {
         return;
     }
 
-    method void runDemo() {
+    method void cmdDemo(int id) {
         var Array demo;
         var String input;
         var int size, i;
-        let size = 37;
-        let demo = Array.new(size);
-        let demo[0] = "CS";
-        let demo[1] = "LT 90";
-        let demo[2] = "FD 100";
-        let demo[3] = "RT 90";
-        let demo[4] = "FD 100";
-        let demo[5] = "RT 90";
-        let demo[6] = "FD 25";
-        let demo[7] = "RT 90";
-        let demo[8] = "FD 75";
-        let demo[9] = "LT 90";
-        let demo[10] = "FD 25";
-        let demo[11] = "RT 90";
-        let demo[12] = "FD 25";
-        let demo[13] = "BK 50";
-        let demo[14] = "LT 90";
-        let demo[15] = "FD 50";
-        let demo[16] = "RT 90";
-        let demo[17] = "FD 50";
-        let demo[18] = "LT 90";
-        let demo[19] = "FD 25";
-        let demo[20] = "RT 90";
-        let demo[21] = "FD 25";
-        let demo[22] = "RT 90";
-        let demo[23] = "FD 75";
-        let demo[24] = "LT 90";
-        let demo[25] = "FD 25";
-        let demo[26] = "LT 90";
-        let demo[27] = "FD 100";
-        let demo[28] = "LT 90";
-        let demo[29] = "FD 100";
-        let demo[30] = "LT 90";
-        let demo[31] = "FD 50";
-        let demo[32] = "BK 100";
-        let demo[33] = "LT 90";
-        let demo[34] = "FD 50";
-        let demo[35] = "RT 90";
-        let demo[36] = "FD 50";
+        if (id = 1) {
+            let size = 2;
+            let demo = Array.new(size);
+            let demo[0] = "CS";
+            let demo[1] = "REPEAT 4 [FD 120 RT 90]";
+        }
+        if (id = 2) {
+            let size = 2;
+            let demo = Array.new(size);
+            let demo[0] = "CS";
+            let demo[1] = "REPEAT 36 [ REPEAT 36 [ FD 10 RT 10] LT 10]";
+        }
+        if (id = 3) {
+            let size = 10;
+            let demo = Array.new(size);
+            let demo[0] = "CS";
+            // Draw sun
+            let demo[1] = "PU FD 50";
+            let demo[2] = "REPEAT 10 [ LT 90 PU FD 5 PD FD 10 PU BK 15 RT 126 PD FD 15 ]";
+            // Draw roof (triangle)
+            let demo[3] = "PU BK 100 PD RT 90";
+            let demo[4] = "REPEAT 3 [ FD 50 LT 120 ]";
+            // Draw house (square)
+            let demo[5] = "RT 90 FD 50";
+            let demo[6] = "REPEAT 4 [ LT 90 FD 50 ]";
+            // Draw door
+            let demo[7] = "LT 90 FD 30";
+            let demo[8] = "LT 90 FD 20 LT 90 FD 10";
+            let demo[9] = "LT 90 FD 20 LT 90 FD 10";
+        }
+        if (size = 0) {
+            let size = 37;
+            let demo = Array.new(size);
+            let demo[0] = "CS";
+            let demo[1] = "LT 90";
+            let demo[2] = "FD 100";
+            let demo[3] = "RT 90";
+            let demo[4] = "FD 100";
+            let demo[5] = "RT 90";
+            let demo[6] = "FD 25";
+            let demo[7] = "RT 90";
+            let demo[8] = "FD 75";
+            let demo[9] = "LT 90";
+            let demo[10] = "FD 25";
+            let demo[11] = "RT 90";
+            let demo[12] = "FD 25";
+            let demo[13] = "BK 50";
+            let demo[14] = "LT 90";
+            let demo[15] = "FD 50";
+            let demo[16] = "RT 90";
+            let demo[17] = "FD 50";
+            let demo[18] = "LT 90";
+            let demo[19] = "FD 25";
+            let demo[20] = "RT 90";
+            let demo[21] = "FD 25";
+            let demo[22] = "RT 90";
+            let demo[23] = "FD 75";
+            let demo[24] = "LT 90";
+            let demo[25] = "FD 25";
+            let demo[26] = "LT 90";
+            let demo[27] = "FD 100";
+            let demo[28] = "LT 90";
+            let demo[29] = "FD 100";
+            let demo[30] = "LT 90";
+            let demo[31] = "FD 50";
+            let demo[32] = "BK 100";
+            let demo[33] = "LT 90";
+            let demo[34] = "FD 50";
+            let demo[35] = "RT 90";
+            let demo[36] = "FD 50";
+        }
 
         do Output.moveCursor(0, 0);
         while (i < size) {
@@ -460,7 +393,7 @@ class Logo {
                 do Sys.wait(500);
             }
             do parseInput(input);
-            if (i = 0) { // wait to print CLEAR command only after clearscreen
+            if (i = 0) { // wait to print CS command only after clearscreen
                 do Output.moveCursor(0, 0);
                 do Output.printString(input);
                 do Sys.wait(500);

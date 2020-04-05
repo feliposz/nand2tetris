@@ -68,26 +68,6 @@ class Turtle {
             let corner = corner + 32;
             let i = i + 2;
         }
-        // debug
-        // if (false) {
-        //     let i = 0;
-        //     let corner = _savedFrameTopLeftCorner(xCur, yCur);
-        //     while (i < 42) {
-        //         do Memory.poke(16384 + corner, ~savedFrame[i]);
-        //         do Memory.poke(16384 + corner + 1, ~savedFrame[i+1]);
-        //         let corner = corner + 32;
-        //         let i = i + 2;
-        //     }
-        //     do Sys.wait(200);
-        //     let i = 0;
-        //     let corner = _savedFrameTopLeftCorner(xCur, yCur);
-        //     while (i < 42) {
-        //         do Memory.poke(16384 + corner, savedFrame[i]);
-        //         do Memory.poke(16384 + corner + 1, savedFrame[i+1]);
-        //         let corner = corner + 32;
-        //         let i = i + 2;
-        //     }
-        // }
         return;
     }
 
@@ -209,7 +189,7 @@ class Turtle {
             do Screen.setColor(true);
             do Screen.drawLine(x1, y1, x2, y2);
         } else {
-            // TODO: Calculate intercept with border and clamp line there
+            // TODO: Calculate intercept with border and clamp line there instead of not drawing
         }
         return;
     }
