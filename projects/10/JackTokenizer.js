@@ -15,6 +15,8 @@ class JackTokenizer {
         this.pos = 0;
         this.type = null;
         this.value = null;
+        this.line = 1;
+        this.linePos = 0;
     }
 
     hasMoreTokens() {
@@ -29,6 +31,10 @@ class JackTokenizer {
         return this.value;
     }
 
+    getPos() {
+        return {line: this.line, col: this.pos - this.linePos};
+    }
+
     advance() {
         let lineComment = false, blockComment = false, inString = false;
         let i = this.pos;
@@ -36,6 +42,10 @@ class JackTokenizer {
         while (i < len) {
             const cur = this.data[i];
             const next = i+1 < len ? this.data[i+1] : '';
+            if (cur == '\n') {
+                this.line++;
+                this.linePos = i;
+            }
             if (lineComment) {
                 if (cur == '\n') {
                     lineComment = false;

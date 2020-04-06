@@ -83,7 +83,7 @@ Parser for Jack:
 - Input is already tokenized
 - Logic
     - Follow the right-hand side of a rule and parse the input accordingly
-    - If the right-hand side species a non-terminal rule, call compileXXX
+    - If the right-hand side specifies a non-terminal rule, call compileXXX
     - Do this recursively
 - Program: JackAnalyzer 
     - Uses JackTockenizer and CompilationEngine
@@ -100,7 +100,7 @@ Lexical elements
 
 ```
 keyword:
-'class' | 'constructor |' 'method' | 'function' | 'int |' 'boolean' | 'char' | 'void' | 'var |' 'static' | 'field' | 'let' | 'do |' 'if' | 'else' | 'while,return |' 'true' | 'false' | 'null' | 'this'
+'class' | 'constructor |' 'method' | 'function' | 'int |' 'boolean' | 'char' | 'void' | 'var |' 'static' | 'field' | 'let' | 'do |' 'if' | 'else' | 'while' | 'return' | 'true' | 'false' | 'null' | 'this'
 
 symbol: '{' | '}' | '(' | ')' | '[' | ']' | '.' | ',' | ';' | '+' | '-' | '*' | '/ |' '&' | '|' | '<' | '>' | '=' | '~'
 

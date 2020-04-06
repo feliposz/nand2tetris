@@ -1,0 +1,376 @@
+class CompilationEngine {
+
+    constructor(tokenizer) {
+        this.tokenizer = tokenizer;
+        this.tokenizer.advance();
+        this.syntaxTree = [];
+    }
+
+    getSyntaxTree() {
+        return this.syntaxTree.join('\n');
+    }
+
+    open(tag) {
+        this.syntaxTree.push(`<${tag}>`);
+    }
+
+    close(tag) {
+        this.syntaxTree.push(`</${tag}>`);
+    }
+
+    append(tag, content) {
+        this.syntaxTree.push(`<${tag}> ${content} </${tag}>`);
+    }
+
+    keyword(str) {
+        if (this.tokenizer.getType() == 'keyword') {
+            if (this.tokenizer.getValue() == str) {
+                this.append('keyword', str);
+                this.tokenizer.advance();
+                return;
+            }
+        }
+        throw new Error(`Expected keyword ${str}`);
+    }
+
+    identifier(type) {
+        if (this.tokenizer.getType() == 'identifier') {
+            this.append('identifier', this.tokenizer.getValue());
+            this.tokenizer.advance();
+            return;
+        }
+        throw new Error(`Expected ${type} (got: ${this.tokenizer.getType()})`);
+    }
+
+    symbol(str) {
+        if (this.tokenizer.getType() == 'symbol') {
+            if (this.tokenizer.getValue() == str) {
+                this.append('symbol', str);
+                this.tokenizer.advance();
+                return;
+            }
+        }
+        throw new Error(`Expected symbol ${str}`);
+    }
+
+    compileClass() {
+        this.open('class');
+        this.keyword('class');
+        this.identifier('className');
+        this.symbol('{');
+        this.compileClassVarDec();
+        this.compileSubroutineDec();
+        this.symbol('}');
+        this.close('class');
+        if (this.tokenizer.hasMoreTokens()) {
+            throw new Error('Only one class definition per file is allowed');
+        }
+    }
+
+    compileClassVarDec() {
+        this.open('classVarDec');
+        while (this.tokenizer.hasMoreTokens()) {
+            if (this.tokenizer.getValue() == 'static') {
+                this.keyword('static');
+            } else if (this.tokenizer.getValue() == 'field') {
+                this.keyword('field');
+            } else {
+                break;
+            }
+            if (this.tokenizer.getValue() == 'int') {
+                this.keyword('int');
+            } else if (this.tokenizer.getValue() == 'char') {
+                this.keyword('char');
+            } else if (this.tokenizer.getValue() == 'boolean') {
+                this.keyword('boolean');
+            } else {
+                this.identifier();
+            }
+            while (this.tokenizer.hasMoreTokens()) {
+                this.identifier();
+                if (this.tokenizer.getValue() == ',') {
+                    this.symbol(',');
+                } else if (this.tokenizer.getValue() == ';') {
+                    this.symbol(';');
+                    break;
+                } else {
+                    throw new Error('Expected symbol , or ;');
+                }
+            }
+        }
+        this.close('classVarDec');
+    }
+
+    compileSubroutineDec() {
+        this.open('subroutineDec');
+        while (this.tokenizer.hasMoreTokens()) {
+            if (this.tokenizer.getValue() == 'constructor') {
+                this.keyword('constructor');
+            } else if (this.tokenizer.getValue() == 'function') {
+                this.keyword('function');
+            } else if (this.tokenizer.getValue() == 'method') {
+                this.keyword('method');
+            } else {
+                break;
+            }
+            if (this.tokenizer.getValue() == 'void') {
+                this.keyword('void');
+            } else if (this.tokenizer.getValue() == 'int') {
+                this.keyword('int');
+            } else if (this.tokenizer.getValue() == 'char') {
+                this.keyword('char');
+            } else if (this.tokenizer.getValue() == 'boolean') {
+                this.keyword('boolean');
+            } else {
+                this.identifier('type');
+            }
+            this.identifier('subroutineName');
+            this.symbol('(');
+            this.compileParameterList();
+            this.symbol(')');
+            this.compileSubroutineBody();
+        }
+        this.close('subroutineDec');
+    }
+
+    compileParameterList() {
+        this.open('parameterList');
+        while (this.tokenizer.hasMoreTokens()) {
+            if (this.tokenizer.getValue() == 'int') {
+                this.keyword('int');
+            } else if (this.tokenizer.getValue() == 'char') {
+                this.keyword('char');
+            } else if (this.tokenizer.getValue() == 'boolean') {
+                this.keyword('boolean');
+            } else if (this.tokenizer.getType() == 'identifier') {
+                this.identifier('type');
+            } else {
+                break;
+            }
+            this.identifier('varName');
+            if (this.tokenizer.getValue() == ',') {
+                this.symbol(',');
+            } else {
+                break;
+            }
+        }
+        this.close('parameterList');
+    }
+
+    compileSubroutineBody() {
+        this.open('subroutineBody');
+        this.symbol('{');
+        this.compileVarDec();
+        this.compileStatements();
+        this.symbol('}');
+        this.close('subroutineBody');
+    }
+
+    compileVarDec() {
+        this.open('varDec');
+        while (this.tokenizer.hasMoreTokens()) {
+            if (this.tokenizer.getValue() == 'var') {
+                this.keyword('var');
+            } else {
+                break;
+            }
+            if (this.tokenizer.getValue() == 'int') {
+                this.keyword('int');
+            } else if (this.tokenizer.getValue() == 'char') {
+                this.keyword('char');
+            } else if (this.tokenizer.getValue() == 'boolean') {
+                this.keyword('boolean');
+            } else {
+                this.identifier();
+            }
+            while (this.tokenizer.hasMoreTokens()) {
+                this.identifier();
+                if (this.tokenizer.getValue() == ',') {
+                    this.symbol(',');
+                } else if (this.tokenizer.getValue() == ';') {
+                    this.symbol(';');
+                    break;
+                } else {
+                    throw new Error('Expected symbol , or ;');
+                }
+            }
+        }
+        this.close('varDec');
+    }
+
+    compileStatements() {
+        this.open('statements');
+        while (this.tokenizer.hasMoreTokens()) {
+            if (this.tokenizer.getValue() == 'let') {
+                this.compileLetStatement();
+            } else if (this.tokenizer.getValue() == 'if') {
+                this.compileIfStatement();
+            } else if (this.tokenizer.getValue() == 'while') {
+                this.compileWhileStatement();
+            } else if (this.tokenizer.getValue() == 'do') {
+                this.compileDoStatement();
+            } else if (this.tokenizer.getValue() == 'return') {
+                this.compileReturnStatement();
+            } else if (this.tokenizer.getValue() == '}') {
+                break;
+            } else {
+                throw new Error('Expected let, if, while, do or }');
+            }
+        }
+        this.close('statements');
+    }
+
+    compileLetStatement() {
+        this.open('letStatement');
+        this.keyword('let');
+        this.identifier('varName');
+        if (this.tokenizer.getValue() == '[') {
+            this.symbol('[');
+            this.compileExpression();
+            this.symbol(']');
+        }
+        this.symbol('=');
+        this.compileExpression();
+        this.symbol(';');
+        this.close('letStatement');
+    }
+
+    compileWhileStatement() {
+        this.open('whileStatement');
+        this.keyword('while');
+        this.symbol('(');
+        this.compileExpression();
+        this.symbol(')');
+        this.symbol('{');
+        this.compileStatements();
+        this.symbol('}');
+        this.close('whileStatement');
+    }
+
+    compileIfStatement() {
+        this.open('ifStatement');
+        this.keyword('if');
+        this.symbol('(');
+        this.compileExpression();
+        this.symbol(')');
+        this.symbol('{');
+        this.compileStatements();
+        this.symbol('}');
+        if (this.tokenizer.getValue() == 'else') {
+            this.keyword('else');
+            this.symbol('{');
+            this.compileStatements();
+            this.symbol('}');
+        }
+        this.close('ifStatement');
+    }
+
+    compileDoStatement() {
+        this.open('doStatement');
+        this.keyword('do');
+        this.compileSubroutineCall();
+        this.symbol(';');
+        this.close('doStatement');
+    }
+
+    compileReturnStatement() {
+        this.open('returnStatement');
+        this.keyword('return');
+        if (this.tokenizer.getValue() != ';') {
+            this.compileExpression();
+        }
+        this.symbol(';');
+        this.close('returnStatement');
+    }
+
+    compileSubroutineCall() {
+        this.open('subroutineCall');
+        this.identifier('name');
+        if (this.tokenizer.getValue() == '.') {
+            this.symbol('.');
+            this.identifier('subroutineName');
+        }
+        this.symbol('(');
+        this.compileExpressionList();
+        this.symbol(')');
+        this.close('subroutineCall');
+    }
+
+    compileExpression() {
+        this.open('expression');
+        while (this.tokenizer.hasMoreTokens()) {
+            this.compileTerm();
+            if (this.tokenizer.getValue() == '+') {
+                this.symbol('+');
+            } else if (this.tokenizer.getValue() == '-') {
+                this.symbol('-');
+            } else if (this.tokenizer.getValue() == '*') {
+                this.symbol('*');
+            } else if (this.tokenizer.getValue() == '/') {
+                this.symbol('/');
+            } else if (this.tokenizer.getValue() == '&') {
+                this.symbol('&');
+            } else if (this.tokenizer.getValue() == '|') {
+                this.symbol('|');
+            } else if (this.tokenizer.getValue() == '=') {
+                this.symbol('=');
+            } else if (this.tokenizer.getValue() == '<') {
+                this.symbol('<');
+            } else if (this.tokenizer.getValue() == '>') {
+                this.symbol('>');
+            } else {
+                break;
+            }
+        }
+        this.close('expression');
+    }
+
+    compileExpressionList() {
+        this.open('expressionList');
+        while (this.tokenizer.hasMoreTokens()) {
+            if (this.tokenizer.getValue() == ')') {
+                break;
+            }
+            this.compileExpression();
+            if (this.tokenizer.getValue() == ',') {
+                this.symbol(',');
+            } else {
+                break;
+            }
+        }
+        this.close('expressionList');
+    }
+
+    compileTerm() {
+        this.open('term');
+        if (this.tokenizer.getValue() == 'true') {
+            this.keyword('true');
+        } else if (this.tokenizer.getValue() == 'false') {
+            this.keyword('false');
+        } else if (this.tokenizer.getValue() == 'null') {
+            this.keyword('null');
+        } else if (this.tokenizer.getValue() == 'this') {
+            this.keyword('this');
+        } else if (this.tokenizer.getValue() == '-') {
+            this.symbol('-');
+            this.compileTerm();
+        } else if (this.tokenizer.getValue() == '~') {
+            this.symbol('~');
+            this.compileTerm();
+        } else if (this.tokenizer.getValue() == '(') {
+            this.symbol('(');
+            this.compileExpression();
+            this.symbol(')');
+        } else if (this.tokenizer.getType() == 'integerConstant') {
+            this.integerConstant();
+        } else if (this.tokenizer.getType() == 'stringConstant') {
+            this.stringConstant();
+        } else {
+            this.identifier('varName');
+        }
+        this.close('term');
+    }
+
+};
+
+module.exports = CompilationEngine;
