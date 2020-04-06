@@ -1,11 +1,11 @@
 const fs = require('fs');
 const path = require('path');
-const JackTockenizer = require('./JackTockenizer.js');
+const JackTokenizer = require('./JackTokenizer.js');
 
 const infile = process.argv[2];
 const outfile = path.join(path.dirname(infile), path.basename(infile, path.extname(infile)) + 'T.test.xml');
 const data = fs.readFileSync(infile, 'utf8');
-const jt = new JackTockenizer(data);
+const jt = new JackTokenizer(data);
 
 const out = [];
 out.push('<tokens>');

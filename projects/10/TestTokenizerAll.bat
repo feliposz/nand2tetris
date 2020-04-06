@@ -1,19 +1,19 @@
 @echo off
 
-echo Apply TestTockenizer...
-node TestTockenizer ArrayTest\Main.jack
+echo Apply TestTokenizer...
+node TestTokenizer ArrayTest\Main.jack
 if %errorlevel% neq 0 exit
-node TestTockenizer ExpressionLessSquare\Main.jack
+node TestTokenizer ExpressionLessSquare\Main.jack
 if %errorlevel% neq 0 exit
-node TestTockenizer ExpressionLessSquare\Square.jack
+node TestTokenizer ExpressionLessSquare\Square.jack
 if %errorlevel% neq 0 exit
-node TestTockenizer ExpressionLessSquare\SquareGame.jack
+node TestTokenizer ExpressionLessSquare\SquareGame.jack
 if %errorlevel% neq 0 exit
-node TestTockenizer Square\Main.jack
+node TestTokenizer Square\Main.jack
 if %errorlevel% neq 0 exit
-node TestTockenizer Square\Square.jack
+node TestTokenizer Square\Square.jack
 if %errorlevel% neq 0 exit
-node TestTockenizer Square\SquareGame.jack
+node TestTokenizer Square\SquareGame.jack
 if %errorlevel% neq 0 exit
 
 echo Compare results:

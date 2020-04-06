@@ -8,7 +8,7 @@ const reservedKeywords = [
     'true', 'false', 'null', 'this'
 ];
 
-class JackTockenizer {
+class JackTokenizer {
 
     constructor(data) {
         this.data = data;
@@ -126,4 +126,4 @@ class JackTockenizer {
 
 };
 
-module.exports = JackTockenizer;
+module.exports = JackTokenizer;
