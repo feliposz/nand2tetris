@@ -11,7 +11,17 @@ const out = [];
 out.push('<tokens>');
 jt.advance();
 while (jt.hasMoreTokens()) {
-    out.push('<' + jt.getType() + '> '+ jt.getValue() + ' </' + jt.getType() + '>');
+    let value = jt.getValue();
+    if (jt.getType() == 'symbol') {
+        if (value == '&') {
+            value = '&amp;';
+        } else if (value == '<') {
+            value = '&lt;';
+        } else if (value == '>') {
+            value = '&gt;';
+        }
+    }
+    out.push('<' + jt.getType() + '> '+ value + ' </' + jt.getType() + '>');
     jt.advance();
 }
 out.push('</tokens>');

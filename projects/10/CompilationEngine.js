@@ -19,6 +19,15 @@ class CompilationEngine {
     }
 
     append(tag, content) {
+        if (tag == 'symbol') {
+            if (content == '&') {
+                content = '&amp;';
+            } else if (content == '<') {
+                content = '&lt;';
+            } else if (content == '>') {
+                content = '&gt;';
+            }
+        }
         this.syntaxTree.push(`<${tag}> ${content} </${tag}>`);
     }
 
@@ -53,6 +62,24 @@ class CompilationEngine {
         throw new Error(`Expected symbol ${str}`);
     }
 
+    stringConstant() {
+        if (this.tokenizer.getType() == 'stringConstant') {
+            this.append('stringConstant', this.tokenizer.getValue());
+            this.tokenizer.advance();
+            return;
+        }
+        throw new Error(`Expected string constant`);
+    }
+
+    integerConstant() {
+        if (this.tokenizer.getType() == 'integerConstant') {
+            this.append('integerConstant', this.tokenizer.getValue());
+            this.tokenizer.advance();
+            return;
+        }
+        throw new Error(`Expected integer constant`);
+    }
+
     compileClass() {
         this.open('class');
         this.keyword('class');
@@ -68,11 +95,12 @@ class CompilationEngine {
     }
 
     compileClassVarDec() {
-        this.open('classVarDec');
         while (this.tokenizer.hasMoreTokens()) {
             if (this.tokenizer.getValue() == 'static') {
+                this.open('classVarDec');
                 this.keyword('static');
             } else if (this.tokenizer.getValue() == 'field') {
+                this.open('classVarDec');
                 this.keyword('field');
             } else {
                 break;
@@ -97,18 +125,20 @@ class CompilationEngine {
                     throw new Error('Expected symbol , or ;');
                 }
             }
+            this.close('classVarDec');
         }
-        this.close('classVarDec');
     }
 
     compileSubroutineDec() {
-        this.open('subroutineDec');
         while (this.tokenizer.hasMoreTokens()) {
             if (this.tokenizer.getValue() == 'constructor') {
+                this.open('subroutineDec');
                 this.keyword('constructor');
             } else if (this.tokenizer.getValue() == 'function') {
+                this.open('subroutineDec');
                 this.keyword('function');
             } else if (this.tokenizer.getValue() == 'method') {
+                this.open('subroutineDec');
                 this.keyword('method');
             } else {
                 break;
@@ -129,8 +159,8 @@ class CompilationEngine {
             this.compileParameterList();
             this.symbol(')');
             this.compileSubroutineBody();
+            this.close('subroutineDec');
         }
-        this.close('subroutineDec');
     }
 
     compileParameterList() {
@@ -167,35 +197,35 @@ class CompilationEngine {
     }
 
     compileVarDec() {
-        this.open('varDec');
         while (this.tokenizer.hasMoreTokens()) {
             if (this.tokenizer.getValue() == 'var') {
+                this.open('varDec');
                 this.keyword('var');
+                if (this.tokenizer.getValue() == 'int') {
+                    this.keyword('int');
+                } else if (this.tokenizer.getValue() == 'char') {
+                    this.keyword('char');
+                } else if (this.tokenizer.getValue() == 'boolean') {
+                    this.keyword('boolean');
+                } else {
+                    this.identifier();
+                }
+                while (this.tokenizer.hasMoreTokens()) {
+                    this.identifier();
+                    if (this.tokenizer.getValue() == ',') {
+                        this.symbol(',');
+                    } else if (this.tokenizer.getValue() == ';') {
+                        this.symbol(';');
+                        break;
+                    } else {
+                        throw new Error('Expected symbol , or ;');
+                    }
+                }
+                this.close('varDec');
             } else {
                 break;
             }
-            if (this.tokenizer.getValue() == 'int') {
-                this.keyword('int');
-            } else if (this.tokenizer.getValue() == 'char') {
-                this.keyword('char');
-            } else if (this.tokenizer.getValue() == 'boolean') {
-                this.keyword('boolean');
-            } else {
-                this.identifier();
-            }
-            while (this.tokenizer.hasMoreTokens()) {
-                this.identifier();
-                if (this.tokenizer.getValue() == ',') {
-                    this.symbol(',');
-                } else if (this.tokenizer.getValue() == ';') {
-                    this.symbol(';');
-                    break;
-                } else {
-                    throw new Error('Expected symbol , or ;');
-                }
-            }
         }
-        this.close('varDec');
     }
 
     compileStatements() {
@@ -283,9 +313,12 @@ class CompilationEngine {
         this.close('returnStatement');
     }
 
-    compileSubroutineCall() {
-        this.open('subroutineCall');
-        this.identifier('name');
+    compileSubroutineCall(lookahead) {
+        if (lookahead) {
+            this.append('identifier', lookahead);
+        } else {
+            this.identifier('name');
+        }
         if (this.tokenizer.getValue() == '.') {
             this.symbol('.');
             this.identifier('subroutineName');
@@ -293,7 +326,6 @@ class CompilationEngine {
         this.symbol('(');
         this.compileExpressionList();
         this.symbol(')');
-        this.close('subroutineCall');
     }
 
     compileExpression() {
@@ -366,7 +398,24 @@ class CompilationEngine {
         } else if (this.tokenizer.getType() == 'stringConstant') {
             this.stringConstant();
         } else {
-            this.identifier('varName');
+            if (this.tokenizer.getType() == 'identifier') {
+                const lookahead = this.tokenizer.getValue();
+                this.tokenizer.advance();
+                if (this.tokenizer.getValue() == '[') {
+                    this.append('identifier', lookahead);
+                    this.symbol('[');
+                    this.compileExpression();
+                    this.symbol(']');
+                } else if (this.tokenizer.getValue() == '(') {
+                    this.compileSubroutineCall(lookahead);
+                } else if (this.tokenizer.getValue() == '.') {
+                    this.compileSubroutineCall(lookahead);
+                } else {
+                    this.append('identifier', lookahead);
+                }
+            } else {
+                throw new Error('Expected integer, string, subroutine call, expression or identifier')
+            }
         }
         this.close('term');
     }

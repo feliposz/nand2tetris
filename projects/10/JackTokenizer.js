@@ -81,15 +81,7 @@ class JackTokenizer {
                 i++;
             } else if ('+-*/&|~<>=.,;()[]{}'.indexOf(cur) >= 0) {
                 this.type = 'symbol';
-                if (cur == '&') {
-                    this.value = '&amp;';
-                } else if (cur == '<') {
-                    this.value = '&lt;';
-                } else if (cur == '>') {
-                    this.value = '&gt;';
-                } else {
-                    this.value = cur;
-                }
+                this.value = cur;
                 i++;
                 break;
             } else if (/[A-Za-z_]/.test(cur)) {
@@ -120,7 +112,14 @@ class JackTokenizer {
                         break;
                     }
                 }
-                this.value = parseInt(this.value, 10);
+                if (this.value == '') {
+                    this.value = 0;
+                } else {
+                    this.value = parseInt(this.value, 10);
+                }
+                if (isNaN(this.value)) {
+                    throw new Error('Invalid integer constant');
+                }
                 if (this.value < 0 || this.value > 32767) {
                     throw new Error('Invalid integer constant (should be 0-32767)');
                 }
