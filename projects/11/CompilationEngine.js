@@ -244,6 +244,14 @@ class CompilationEngine {
         this.compileVarDec();
         const numVars = this.localTable.numKind('local') + (kind == 'method' ? 1 : 0);
         this.vm.writeFunction(this.className + '.' + name, numVars);
+        if (kind == 'constructor') {
+            this.vm.writePush('constant', this.classTable.numKind('field'));
+            this.vm.writeCall('Memory.alloc', 1);
+            this.vm.writePop('pointer', 0);
+        } else if (kind == 'method') {
+            this.vm.writePush('argument', 0);
+            this.vm.writePop('pointer', 0);
+        }
         this.compileStatements();
         this.symbol('}');
         this.close('subroutineBody');
