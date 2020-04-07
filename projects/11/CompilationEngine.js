@@ -317,6 +317,7 @@ class CompilationEngine {
     }
 
     compileLetStatement() {
+        let isArray = false;
         this.open('letStatement');
         this.keyword('let');
         const varName = this.tokenizer.getValue();
@@ -327,14 +328,24 @@ class CompilationEngine {
         }
         this.identifier('varName');
         if (this.tokenizer.getValue() == '[') {
+            isArray = true;
+            this.vm.writePush(kind == 'field' ? 'this' : kind, index);
             this.symbol('[');
             this.compileExpression();
             this.symbol(']');
+            this.vm.writeArithmetic('+');
         }
         this.symbol('=');
         this.compileExpression();
         this.symbol(';');
-        this.vm.writePop(kind == 'field' ? 'this' : kind, index);
+        if (isArray) {
+            this.vm.writePop('temp', 0);
+            this.vm.writePop('pointer', 1);
+            this.vm.writePush('temp', 0);
+            this.vm.writePop('that', 0);
+        } else {
+            this.vm.writePop(kind == 'field' ? 'this' : kind, index);
+        }
         this.close('letStatement');
     }
 
@@ -512,17 +523,33 @@ class CompilationEngine {
             this.integerConstant();
             this.vm.writePush('constant', token);
         } else if (this.tokenizer.getType() == 'stringConstant') {
+            const str = this.tokenizer.getValue();
             this.stringConstant();
+            this.vm.writePush('constant', str.length);
+            this.vm.writeCall('String.new', 1);
+            for (let i = 0; i < str.length; i++) {
+                this.vm.writePush('constant', str.charCodeAt(i));
+                this.vm.writeCall('String.appendChar', 2);
+            }
         } else {
             if (this.tokenizer.getType() == 'identifier') {
                 const lookahead = token;
                 this.tokenizer.advance();
                 this.appendUseVar(lookahead);
                 if (this.tokenizer.getValue() == '[') {
+                    const kind = this.localTable.kindOf(lookahead) || this.classTable.kindOf(lookahead);
+                    const index = this.localTable.indexOf(lookahead) == null ? this.classTable.indexOf(lookahead) : this.localTable.indexOf(lookahead);
+                    if (kind == null) {
+                        throw new Error(`Undeclared identifier: ${lookahead}`);
+                    }
+                    this.vm.writePush(kind == 'field' ? 'this' : kind, index);
                     this.append('identifier', lookahead);
                     this.symbol('[');
                     this.compileExpression();
                     this.symbol(']');
+                    this.vm.writeArithmetic('+');
+                    this.vm.writePop('pointer', 1);
+                    this.vm.writePush('that', 0);
                 } else if (this.tokenizer.getValue() == '(') {
                     this.compileSubroutineCall(lookahead);
                 } else if (this.tokenizer.getValue() == '.') {
