@@ -20,6 +20,10 @@ class SymbolTable {
         this.indexSeq.local = 0;
     }
 
+    numKind(kind) {
+        return this.indexSeq[kind];
+    }
+
     kindOf(name) {
         if (name in this.symbols) {
             return this.symbols[name].kind;

@@ -1,4 +1,5 @@
 const SymbolTable = require('./SymbolTable.js');
+const VMWriter = require('./VMWriter.js');
 
 class CompilationEngine {
 
@@ -6,12 +7,18 @@ class CompilationEngine {
         this.tokenizer = tokenizer;
         this.tokenizer.advance();
         this.syntaxTree = [];
+        this.className = '';
+        this.vm = new VMWriter();
         this.classTable = new SymbolTable();
         this.localTable = new SymbolTable();
     }
 
     getSyntaxTree() {
         return this.syntaxTree.join('\n');
+    }
+
+    getCode() {
+        return this.vm.getCode();
     }
 
     open(tag) {
@@ -107,6 +114,7 @@ class CompilationEngine {
     compileClass() {
         this.open('class');
         this.keyword('class');
+        this.className = this.tokenizer.getValue();
         this.identifier('className');
         this.symbol('{');
         this.compileClassVarDec();
@@ -160,35 +168,38 @@ class CompilationEngine {
 
     compileSubroutineDec() {
         while (this.tokenizer.hasMoreTokens()) {
-            if (this.tokenizer.getValue() == 'constructor') {
+            const kind = this.tokenizer.getValue();
+            if (kind == 'constructor') {
                 this.open('subroutineDec');
                 this.keyword('constructor');
-            } else if (this.tokenizer.getValue() == 'function') {
+            } else if (kind == 'function') {
                 this.open('subroutineDec');
                 this.keyword('function');
-            } else if (this.tokenizer.getValue() == 'method') {
+            } else if (kind == 'method') {
                 this.open('subroutineDec');
                 this.keyword('method');
             } else {
                 break;
             }
-            if (this.tokenizer.getValue() == 'void') {
+            const retType = this.tokenizer.getValue();
+            if (retType == 'void') {
                 this.keyword('void');
-            } else if (this.tokenizer.getValue() == 'int') {
+            } else if (retType == 'int') {
                 this.keyword('int');
-            } else if (this.tokenizer.getValue() == 'char') {
+            } else if (retType == 'char') {
                 this.keyword('char');
-            } else if (this.tokenizer.getValue() == 'boolean') {
+            } else if (retType == 'boolean') {
                 this.keyword('boolean');
             } else {
                 this.identifier('className');
             }
+            const name = this.tokenizer.getValue();
             this.identifier('subroutineName');
             this.localTable.startSubroutine();
             this.symbol('(');
             this.compileParameterList();
             this.symbol(')');
-            this.compileSubroutineBody();
+            this.compileSubroutineBody(name, kind);
             this.close('subroutineDec');
         }
     }
@@ -222,10 +233,12 @@ class CompilationEngine {
         this.close('parameterList');
     }
 
-    compileSubroutineBody() {
+    compileSubroutineBody(name, kind) {
         this.open('subroutineBody');
         this.symbol('{');
         this.compileVarDec();
+        const numVars = this.localTable.numKind('local') + (kind == 'method' ? 1 : 0);
+        this.vm.writeFunction(this.className + '.' + name, numVars);
         this.compileStatements();
         this.symbol('}');
         this.close('subroutineBody');
@@ -342,6 +355,7 @@ class CompilationEngine {
         this.keyword('do');
         this.compileSubroutineCall();
         this.symbol(';');
+        this.vm.writePop('temp', 0);
         this.close('doStatement');
     }
 
@@ -352,48 +366,57 @@ class CompilationEngine {
             this.compileExpression();
         }
         this.symbol(';');
+        this.vm.writeReturn();
         this.close('returnStatement');
     }
 
     compileSubroutineCall(lookahead) {
+        let name, functionName, numArgs = 0;
         if (lookahead) {
             this.append('identifier', lookahead);
+            name = lookahead;
         } else {
-            const name = this.tokenizer.getValue();
+            name = this.tokenizer.getValue();
             this.identifier('name');
             this.appendUseVar(name);
         }
         if (this.tokenizer.getValue() == '.') {
             this.symbol('.');
+            if (this.localTable.typeOf(name)) {
+                this.vm.writePush(this.localTable.kindOf(name), this.localTable.indexOf(name));
+                numArgs = 1;
+                name = this.localTable.typeOf(name);
+            } else if (this.classTable.typeOf(name)) {
+                if (this.classTable.kindOf(name) == 'field') {
+                    this.vm.writePush('this', this.classTable.indexOf(name));
+                } else {
+                    this.vm.writePush('static', this.classTable.indexOf(name));
+                }
+                numArgs = 1;
+                name = this.classTable.typeOf(name);
+            }
+            functionName = name + '.' + this.tokenizer.getValue();
             this.identifier('subroutineName');
+        } else {
+            numArgs = 1;
+            this.vm.writePush('pointer', 0);
+            functionName = this.className + '.' + name;
         }
         this.symbol('(');
-        this.compileExpressionList();
+        numArgs += this.compileExpressionList();
         this.symbol(')');
+        this.vm.writeCall(functionName, numArgs);
     }
 
     compileExpression() {
         this.open('expression');
+        this.compileTerm();
         while (this.tokenizer.hasMoreTokens()) {
-            this.compileTerm();
-            if (this.tokenizer.getValue() == '+') {
-                this.symbol('+');
-            } else if (this.tokenizer.getValue() == '-') {
-                this.symbol('-');
-            } else if (this.tokenizer.getValue() == '*') {
-                this.symbol('*');
-            } else if (this.tokenizer.getValue() == '/') {
-                this.symbol('/');
-            } else if (this.tokenizer.getValue() == '&') {
-                this.symbol('&');
-            } else if (this.tokenizer.getValue() == '|') {
-                this.symbol('|');
-            } else if (this.tokenizer.getValue() == '=') {
-                this.symbol('=');
-            } else if (this.tokenizer.getValue() == '<') {
-                this.symbol('<');
-            } else if (this.tokenizer.getValue() == '>') {
-                this.symbol('>');
+            const op = this.tokenizer.getValue();
+            if ('+-*/&|=<>'.indexOf(op) >= 0) {
+                this.symbol(op); 
+                this.compileTerm();
+                this.vm.writeArithmetic(op);
             } else {
                 break;
             }
@@ -402,12 +425,14 @@ class CompilationEngine {
     }
 
     compileExpressionList() {
+        let numArgs = 0;
         this.open('expressionList');
         while (this.tokenizer.hasMoreTokens()) {
             if (this.tokenizer.getValue() == ')') {
                 break;
             }
             this.compileExpression();
+            numArgs++;
             if (this.tokenizer.getValue() == ',') {
                 this.symbol(',');
             } else {
@@ -415,35 +440,45 @@ class CompilationEngine {
             }
         }
         this.close('expressionList');
+        return numArgs;
     }
 
     compileTerm() {
         this.open('term');
-        if (this.tokenizer.getValue() == 'true') {
+        const token = this.tokenizer.getValue();
+        if (token == 'true') {
             this.keyword('true');
-        } else if (this.tokenizer.getValue() == 'false') {
+            this.vm.writePush('constant', 1);
+            this.vm.writeArithmetic('neg');
+        } else if (token == 'false') {
             this.keyword('false');
-        } else if (this.tokenizer.getValue() == 'null') {
+            this.vm.writePush('constant', 0);
+        } else if (token == 'null') {
             this.keyword('null');
-        } else if (this.tokenizer.getValue() == 'this') {
+            this.vm.writePush('constant', 0);
+        } else if (token == 'this') {
             this.keyword('this');
-        } else if (this.tokenizer.getValue() == '-') {
+            this.vm.writePush('pointer', 0);
+        } else if (token == '-') {
             this.symbol('-');
             this.compileTerm();
-        } else if (this.tokenizer.getValue() == '~') {
+            this.vm.writeArithmetic('neg');
+        } else if (token == '~') {
             this.symbol('~');
             this.compileTerm();
-        } else if (this.tokenizer.getValue() == '(') {
+            this.vm.writeArithmetic('not');
+        } else if (token == '(') {
             this.symbol('(');
             this.compileExpression();
             this.symbol(')');
         } else if (this.tokenizer.getType() == 'integerConstant') {
             this.integerConstant();
+            this.vm.writePush('constant', token);
         } else if (this.tokenizer.getType() == 'stringConstant') {
             this.stringConstant();
         } else {
             if (this.tokenizer.getType() == 'identifier') {
-                const lookahead = this.tokenizer.getValue();
+                const lookahead = token;
                 this.tokenizer.advance();
                 this.appendUseVar(lookahead);
                 if (this.tokenizer.getValue() == '[') {
