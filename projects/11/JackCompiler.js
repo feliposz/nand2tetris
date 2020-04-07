@@ -4,18 +4,21 @@ const JackTokenizer = require('./JackTokenizer.js');
 const CompilationEngine = require('./CompilationEngine.js');
 
 const readpath = process.argv[2];
+const syntax = process.argv[3] || '';
 const stat = fs.statSync(readpath);
 
 function analyzeFile(filepath) {
-    console.log('  Analyzing file ' + filepath);
-    const outfile = path.join(path.dirname(filepath), path.basename(filepath, path.extname(filepath)) + '.test.xml');
+    console.log('  Compiling file ' + filepath);
+    const syntaxFile = path.join(path.dirname(filepath), path.basename(filepath, path.extname(filepath)) + '.xml');
     const data = fs.readFileSync(filepath, 'utf8');
     const tokenizer = new JackTokenizer(data);
     const engine = new CompilationEngine(tokenizer);
     try {
         engine.compileClass();
-        fs.writeFileSync(outfile, engine.getSyntaxTree(), 'utf8');
-        console.log('  > Written analysis to file ' + outfile);
+        if (syntax == '-s') {
+            fs.writeFileSync(syntaxFile, engine.getSyntaxTree(), 'utf8');
+            console.log('  > Written syntax analysis to file ' + syntaxFile);
+        }
     } catch (e) {
         const pos = tokenizer.getPos();
         console.error(`Error at line ${pos.line}, position ${pos.col}: ${e.message}`);

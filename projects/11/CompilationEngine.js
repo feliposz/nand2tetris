@@ -1,9 +1,13 @@
+const SymbolTable = require('./SymbolTable.js');
+
 class CompilationEngine {
 
     constructor(tokenizer) {
         this.tokenizer = tokenizer;
         this.tokenizer.advance();
         this.syntaxTree = [];
+        this.classTable = new SymbolTable();
+        this.localTable = new SymbolTable();
     }
 
     getSyntaxTree() {
@@ -29,6 +33,26 @@ class CompilationEngine {
             }
         }
         this.syntaxTree.push(`<${tag}> ${content} </${tag}>`);
+    }
+
+    appendDefineVar(name, type, kind, index) {
+        this.append('defineVar', `name: ${name}, type: ${type}, kind: ${kind}, index: ${index}`);
+    }
+
+    appendUseVar(name) {
+        const type = this.localTable.typeOf(name),
+              kind = this.localTable.kindOf(name),
+              index = this.localTable.indexOf(name);
+        if (kind) {
+            this.append('useVar', `name: ${name}, type: ${type}, kind: ${kind}, index: ${index}`);
+        } else {
+            const type = this.classTable.typeOf(name),
+                  kind = this.classTable.kindOf(name),
+                  index = this.classTable.indexOf(name);
+            if (kind) {
+                this.append('useVar', `name: ${name}, type: ${type}, kind: ${kind}, index: ${index}`);
+            }
+        }
     }
 
     keyword(str) {
@@ -96,6 +120,7 @@ class CompilationEngine {
 
     compileClassVarDec() {
         while (this.tokenizer.hasMoreTokens()) {
+            const kind = this.tokenizer.getValue();
             if (this.tokenizer.getValue() == 'static') {
                 this.open('classVarDec');
                 this.keyword('static');
@@ -105,6 +130,7 @@ class CompilationEngine {
             } else {
                 break;
             }
+            const type = this.tokenizer.getValue();
             if (this.tokenizer.getValue() == 'int') {
                 this.keyword('int');
             } else if (this.tokenizer.getValue() == 'char') {
@@ -112,10 +138,13 @@ class CompilationEngine {
             } else if (this.tokenizer.getValue() == 'boolean') {
                 this.keyword('boolean');
             } else {
-                this.identifier();
+                this.identifier('className');
             }
             while (this.tokenizer.hasMoreTokens()) {
+                const name = this.tokenizer.getValue();
                 this.identifier();
+                const index = this.classTable.define(name, type, kind);
+                this.appendDefineVar(name, type, kind, index);
                 if (this.tokenizer.getValue() == ',') {
                     this.symbol(',');
                 } else if (this.tokenizer.getValue() == ';') {
@@ -152,9 +181,10 @@ class CompilationEngine {
             } else if (this.tokenizer.getValue() == 'boolean') {
                 this.keyword('boolean');
             } else {
-                this.identifier('type');
+                this.identifier('className');
             }
             this.identifier('subroutineName');
+            this.localTable.startSubroutine();
             this.symbol('(');
             this.compileParameterList();
             this.symbol(')');
@@ -166,6 +196,7 @@ class CompilationEngine {
     compileParameterList() {
         this.open('parameterList');
         while (this.tokenizer.hasMoreTokens()) {
+            const type = this.tokenizer.getValue();
             if (this.tokenizer.getValue() == 'int') {
                 this.keyword('int');
             } else if (this.tokenizer.getValue() == 'char') {
@@ -173,11 +204,15 @@ class CompilationEngine {
             } else if (this.tokenizer.getValue() == 'boolean') {
                 this.keyword('boolean');
             } else if (this.tokenizer.getType() == 'identifier') {
-                this.identifier('type');
+                this.identifier('className');
             } else {
                 break;
             }
+            const name = this.tokenizer.getValue();
+            const kind = 'argument';
             this.identifier('varName');
+            const index = this.localTable.define(name, type, kind);
+            this.appendDefineVar(name, type, kind, index);
             if (this.tokenizer.getValue() == ',') {
                 this.symbol(',');
             } else {
@@ -201,6 +236,7 @@ class CompilationEngine {
             if (this.tokenizer.getValue() == 'var') {
                 this.open('varDec');
                 this.keyword('var');
+                const type = this.tokenizer.getValue();
                 if (this.tokenizer.getValue() == 'int') {
                     this.keyword('int');
                 } else if (this.tokenizer.getValue() == 'char') {
@@ -208,10 +244,14 @@ class CompilationEngine {
                 } else if (this.tokenizer.getValue() == 'boolean') {
                     this.keyword('boolean');
                 } else {
-                    this.identifier();
+                    this.identifier('className');
                 }
                 while (this.tokenizer.hasMoreTokens()) {
-                    this.identifier();
+                    const name = this.tokenizer.getValue();
+                    const kind = 'local';
+                    this.identifier("varName");
+                    const index = this.localTable.define(name, type, kind);
+                    this.appendDefineVar(name, type, kind, index);
                     if (this.tokenizer.getValue() == ',') {
                         this.symbol(',');
                     } else if (this.tokenizer.getValue() == ';') {
@@ -253,7 +293,9 @@ class CompilationEngine {
     compileLetStatement() {
         this.open('letStatement');
         this.keyword('let');
+        const name = this.tokenizer.getValue();
         this.identifier('varName');
+        this.appendUseVar(name);
         if (this.tokenizer.getValue() == '[') {
             this.symbol('[');
             this.compileExpression();
@@ -317,7 +359,9 @@ class CompilationEngine {
         if (lookahead) {
             this.append('identifier', lookahead);
         } else {
+            const name = this.tokenizer.getValue();
             this.identifier('name');
+            this.appendUseVar(name);
         }
         if (this.tokenizer.getValue() == '.') {
             this.symbol('.');
@@ -401,6 +445,7 @@ class CompilationEngine {
             if (this.tokenizer.getType() == 'identifier') {
                 const lookahead = this.tokenizer.getValue();
                 this.tokenizer.advance();
+                this.appendUseVar(lookahead);
                 if (this.tokenizer.getValue() == '[') {
                     this.append('identifier', lookahead);
                     this.symbol('[');
