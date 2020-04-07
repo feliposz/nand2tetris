@@ -202,15 +202,19 @@ class CompilationEngine {
             this.identifier('subroutineName');
             this.localTable.startSubroutine();
             this.symbol('(');
-            this.compileParameterList();
+            this.compileParameterList(kind);
             this.symbol(')');
             this.compileSubroutineBody(name, kind);
             this.close('subroutineDec');
         }
     }
 
-    compileParameterList() {
+    compileParameterList(kind) {
         this.open('parameterList');
+        if (kind == 'method') {
+            const index = this.localTable.define('this', this.className, 'argument');
+            this.appendDefineVar('this', this.className, 'argument', index);
+        }
         while (this.tokenizer.hasMoreTokens()) {
             const type = this.tokenizer.getValue();
             if (this.tokenizer.getValue() == 'int') {
@@ -242,7 +246,7 @@ class CompilationEngine {
         this.open('subroutineBody');
         this.symbol('{');
         this.compileVarDec();
-        const numVars = this.localTable.numKind('local') + (kind == 'method' ? 1 : 0);
+        const numVars = this.localTable.numKind('local');
         this.vm.writeFunction(this.className + '.' + name, numVars);
         if (kind == 'constructor') {
             this.vm.writePush('constant', this.classTable.numKind('field'));
@@ -496,8 +500,8 @@ class CompilationEngine {
         const token = this.tokenizer.getValue();
         if (token == 'true') {
             this.keyword('true');
-            this.vm.writePush('constant', 1);
-            this.vm.writeArithmetic('neg');
+            this.vm.writePush('constant', 0);
+            this.vm.writeArithmetic('not');
         } else if (token == 'false') {
             this.keyword('false');
             this.vm.writePush('constant', 0);
