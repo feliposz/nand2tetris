@@ -8,6 +8,7 @@ class CompilationEngine {
         this.tokenizer.advance();
         this.syntaxTree = [];
         this.className = '';
+        this.labelSeq = 0;
         this.vm = new VMWriter();
         this.classTable = new SymbolTable();
         this.localTable = new SymbolTable();
@@ -19,6 +20,10 @@ class CompilationEngine {
 
     getCode() {
         return this.vm.getCode();
+    }
+
+    nextLabel(prefix) {
+        return prefix + this.labelSeq++;
     }
 
     open(tag) {
@@ -306,9 +311,13 @@ class CompilationEngine {
     compileLetStatement() {
         this.open('letStatement');
         this.keyword('let');
-        const name = this.tokenizer.getValue();
+        const varName = this.tokenizer.getValue();
+        const kind = this.localTable.kindOf(varName) || this.classTable.kindOf(varName);
+        const index = this.localTable.indexOf(varName) == null ? this.classTable.indexOf(varName) : this.localTable.indexOf(varName);
+        if (kind == null) {
+            throw new Error(`Undeclared identifier: ${varName}`);
+        }
         this.identifier('varName');
-        this.appendUseVar(name);
         if (this.tokenizer.getValue() == '[') {
             this.symbol('[');
             this.compileExpression();
@@ -317,36 +326,54 @@ class CompilationEngine {
         this.symbol('=');
         this.compileExpression();
         this.symbol(';');
+        this.vm.writePop(kind == 'field' ? 'this' : kind, index);
         this.close('letStatement');
     }
 
     compileWhileStatement() {
+        const begin = this.nextLabel('while_begin');
+        const end = this.nextLabel('while_end');
         this.open('whileStatement');
         this.keyword('while');
         this.symbol('(');
+        this.vm.writeLabel(begin);
         this.compileExpression();
+        this.vm.writeArithmetic('not');
+        this.vm.writeIf(end);
         this.symbol(')');
         this.symbol('{');
         this.compileStatements();
+        this.vm.writeGoto(begin);
         this.symbol('}');
+        this.vm.writeLabel(end);
         this.close('whileStatement');
     }
 
     compileIfStatement() {
+        const if_false = this.nextLabel('if_false');
         this.open('ifStatement');
         this.keyword('if');
         this.symbol('(');
         this.compileExpression();
+        this.vm.writeArithmetic('not');
+        this.vm.writeIf(if_false);
         this.symbol(')');
         this.symbol('{');
         this.compileStatements();
         this.symbol('}');
         if (this.tokenizer.getValue() == 'else') {
+            const if_end = this.nextLabel('if_end');
+            this.vm.writeGoto(if_end);
+            this.vm.writeLabel(if_false);
             this.keyword('else');
             this.symbol('{');
             this.compileStatements();
             this.symbol('}');
+            this.vm.writeLabel(if_end);
+        } else {
+            this.vm.writeLabel(if_false);
         }
+
         this.close('ifStatement');
     }
 
@@ -364,6 +391,8 @@ class CompilationEngine {
         this.keyword('return');
         if (this.tokenizer.getValue() != ';') {
             this.compileExpression();
+        } else {
+            this.vm.writePush('constant', 0);
         }
         this.symbol(';');
         this.vm.writeReturn();
@@ -492,6 +521,12 @@ class CompilationEngine {
                     this.compileSubroutineCall(lookahead);
                 } else {
                     this.append('identifier', lookahead);
+                    const kind = this.localTable.kindOf(lookahead) || this.classTable.kindOf(lookahead);
+                    const index = this.localTable.indexOf(lookahead) == null ? this.classTable.indexOf(lookahead) : this.localTable.indexOf(lookahead);
+                    if (kind == null) {
+                        throw new Error(`Undeclared identifier: ${lookahead}`);
+                    }
+                    this.vm.writePush(kind == 'field' ? 'this' : kind, index);
                 }
             } else {
                 throw new Error('Expected integer, string, subroutine call, expression or identifier')
