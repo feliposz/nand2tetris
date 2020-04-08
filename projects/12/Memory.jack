@@ -10,25 +10,55 @@
  */ 
 class Memory {
 
+    static Array ram;
+    static Array freeList;
+
     /** Initializes the class. */
     function void init() {
+        let ram = 0;
+        let freeList = 2048;
+        let freeList[0] = null; // next
+        let freeList[1] = 14336; // size
+        return;
     }
 
     /** Returns the RAM value at the given address. */
     function int peek(int address) {
+        return ram[address];
     }
 
     /** Sets the RAM value at the given address to the given value. */
     function void poke(int address, int value) {
+        let ram[address] = value;
+        return;
     }
 
     /** Finds an available RAM block of the given size and returns
      *  a reference to its base address. */
     function int alloc(int size) {
+        var Array node, block;
+        var int i;
+        let node = freeList;
+        while (~(node = 0)) {
+            // first fit
+            if (node[1] > (size + 2)) {
+                let block = node + node[1] - (size + 2); // allocate block at end of free space
+                let block[0] = null; // next
+                let block[1] = size; // size
+                let node[1] = node[1] - (size + 2); // shrink free space
+                return block + 2; // allocated address start after next and size
+            }
+            let node = node[0]; // advance to next
+        }
+        do Sys.error(6);
+        return -1;
     }
 
     /** De-allocates the given object (cast as an array) by making
      *  it available for future allocations. */
     function void deAlloc(Array o) {
+        let o[-2] = freeList;
+        let freeList = o-2;
+        return;
     }    
 }

@@ -20,10 +20,46 @@ sqrt(x)
     y = 0
     for j = n/2-1 .. 0 do
         // Note: watch overflow of (y + 2^j) ^ 2...
-        if (y + 2^j) ^ 2 <= x then y = y + 2^j 
+        if (y + 2^j) ^ 2 <= x then y = y + 2^j
     return y
 ```
 - To efficiently calculate 2^j:
     - Could use bit shift on hardware that supports it
     - Since the Hack computer doesn't have bit shift, build a static lookup table on Math.init
 - Handle division of negative numbers (abs) and overflow of y
+
+## Memory
+
+Memory access pseudocode:
+
+```
+static Array ram
+
+init:
+    ram = 0
+
+peek(addr):
+    return ram[addr]
+
+poke(addr, value):
+    ram[addr] = value
+```
+
+Memory management
+
+- Heap segment: 2048 - 16383
+- Linked list of free blocks
+    - next
+    - size
+    - free space
+- Alloc(reqSize)
+    - Scan list of free blocks
+    - Possible if block->size > reqSize + 2
+    - Use first fit or best fit
+    - If no free block found:
+        - Return failure
+        - Optional: attempt memory defragmentation
+    - Update freeList
+    - Return block
+- Dealloc(addr)
+    - Append free block to end of list
