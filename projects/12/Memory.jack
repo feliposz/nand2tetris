@@ -74,8 +74,30 @@ class Memory {
     /** De-allocates the given object (cast as an array) by making
      *  it available for future allocations. */
     function void deAlloc(Array o) {
-        let o[-2] = freeList;
-        let freeList = o-2;
+        var Array curr;
+        var boolean break;
+        // insert at head of freeList
+        if ((o-2) < freeList) {
+            let o[-2] = freeList;
+            let freeList = o-2;
+        } else {
+            let curr = freeList;
+            // find fist node that is after o
+            while (~break) {
+                if (curr[0] = null) {
+                    let break = true;
+                } else {
+                    if ((o-2) > curr[0]) {
+                        let curr = curr[0];
+                    } else {
+                        let break = true;
+                    }
+                }
+            }
+            // insert freed node between curr and next
+            let o[-2] = curr[0];
+            let curr[0] = o-2;
+        }
         do Memory._freeList(68);
         return;
     }    
