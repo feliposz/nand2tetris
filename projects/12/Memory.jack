@@ -36,22 +36,37 @@ class Memory {
     /** Finds an available RAM block of the given size and returns
      *  a reference to its base address. */
     function int alloc(int size) {
-        var Array node, block;
+        var Array node, best, block;
         var int i;
+        let best = null;
         let node = freeList;
-        while (~(node = 0)) {
-            // first fit
-            if (node[1] > (size + 2)) {
-                let block = node + node[1] - (size + 2); // allocate block at end of free space
-                let block[0] = null; // next
-                let block[1] = size; // size
-                let node[1] = node[1] - (size + 2); // shrink free space
-                return block + 2; // allocated address start after next and size
+        while (~(node = null)) {
+            if (node[1] = (size + 2)) { // perfect fit
+                let best = node;
+                let node = null;
+            } else {
+                if (node[1] > (size + 2)) {
+                    if (best = null) { // first found
+                        let best = node;
+                    } else {
+                        if (node[1] < best[1]) { // found a smaller segment
+                            let best = node;
+                        }
+                    }
+                }
+                let node = node[0]; // advance to next
             }
-            let node = node[0]; // advance to next
         }
-        do Sys.error(6);
-        return -1;
+        if (best = null) { // no free node found
+            do Sys.error(6);
+            return -1;
+        } else {
+            let block = best + best[1] - (size + 2); // allocate block at end of free space
+            let block[0] = null; // next
+            let block[1] = size; // size
+            let best[1] = best[1] - (size + 2); // shrink free space
+            return block + 2; // allocated address start after next and size
+        }
     }
 
     /** De-allocates the given object (cast as an array) by making
