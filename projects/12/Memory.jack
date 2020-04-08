@@ -12,6 +12,7 @@ class Memory {
 
     static Array ram;
     static Array freeList;
+    static boolean debug;
 
     /** Initializes the class. */
     function void init() {
@@ -38,6 +39,7 @@ class Memory {
     function int alloc(int size) {
         var Array node, best, block;
         var int i;
+        do Memory._freeList(65);
         let best = null;
         let node = freeList;
         while (~(node = null)) {
@@ -74,6 +76,34 @@ class Memory {
     function void deAlloc(Array o) {
         let o[-2] = freeList;
         let freeList = o-2;
+        do Memory._freeList(68);
         return;
     }    
+
+    function void _freeList(char c) {
+        var Array node;
+        if (~debug) {
+            return;
+        }
+        let node = freeList;
+        do Output.printChar(c);
+        do Output.printChar(58);
+        while (~(node = null)) {
+            do Output.printInt(node);
+            do Output.printChar(40);
+            do Output.printInt(node[1]);
+            do Output.printChar(41);
+            do Output.printChar(45);
+            do Output.printChar(62);
+            let node = node[0];
+        }
+        do Output.printChar(88);
+        do Output.println();
+        return;
+    }
+
+    function void _setDebug() {
+        let debug = true;
+        return;
+    }
 }

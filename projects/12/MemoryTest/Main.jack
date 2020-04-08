@@ -10,6 +10,8 @@ class Main {
     function void main() {
         var int temp;
         var Array a, b, c;
+
+        do Memory._setDebug();
         
         do Memory.poke(8000, 333);       // RAM[8000] = 333
         let temp = Memory.peek(8000);

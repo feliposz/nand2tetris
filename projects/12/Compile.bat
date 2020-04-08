@@ -3,7 +3,7 @@
 rem call ..\..\tools\JackCompiler.bat ArrayTest
 rem call ..\..\tools\JackCompiler.bat KeyboardTest
 rem call ..\..\tools\JackCompiler.bat MathTest
-rem call ..\..\tools\JackCompiler.bat MemoryTest
+call ..\..\tools\JackCompiler.bat MemoryTest
 rem call ..\..\tools\JackCompiler.bat OutputTest
 rem call ..\..\tools\JackCompiler.bat ScreenTest
 rem call ..\..\tools\JackCompiler.bat StringTest
