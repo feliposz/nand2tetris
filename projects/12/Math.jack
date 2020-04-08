@@ -9,12 +9,29 @@
  */
 class Math {
 
+    /** Power of 2 table */
+    static Array pow2;
+
     /** Initializes the library. */
     function void init() {
+        var int i, p2;
+        let pow2 = Array.new(16);
+        let p2 = 1;
+        while (i < 16) {
+            let pow2[i] = p2;
+            let p2 = p2 + p2;
+            let i = i + 1;
+        }
+        return;
     }
 
     /** Returns the absolute value of x. */
     function int abs(int x) {
+        if (x < 0) {
+            return -x;
+        } else {
+            return x;
+        }
     }
 
     /** Returns the product of x and y. 
@@ -23,6 +40,18 @@ class Math {
      *  the Jack expressions x*y and multiply(x,y) return the same value.
      */
     function int multiply(int x, int y) {
+        var int i, bitMask, shiftedX, prod;
+        let shiftedX = x;
+        let bitMask = 1;
+        while (i < 16) {
+            if ((y & bitMask) = bitMask) {
+                let prod = prod + shiftedX;
+            }
+            let shiftedX = shiftedX + shiftedX;
+            let bitMask = bitMask + bitMask;
+            let i = i + 1;
+        }
+        return prod;
     }
 
     /** Returns the integer part of x/y.
@@ -31,17 +60,60 @@ class Math {
      *  the Jack expressions x/y and divide(x,y) return the same value.
      */
     function int divide(int x, int y) {
+        var int q, q2, y2;
+        if (x < 0) {
+            return -Math.divide(-x, y);
+        }
+        if (y < 0) {
+            return -Math.divide(x, -y);
+        }
+        if (y > x) {
+            return 0;
+        } else {
+            let y2 = y + y;
+            if (y2 < 0) { // overflow
+                return 0;
+            }
+            let q = Math.divide(x, y2);
+            let q2 = q + q;
+            if ((x - Math.multiply(q2, y)) < y) {
+                return q2;
+            } else {
+                return q2 + 1;
+            }
+        }
     }
 
     /** Returns the integer part of the square root of x. */
     function int sqrt(int x) {
+        var int y, j, z, sqZ;
+        let j = 7; // N / 2 - 1, where N = 16 (bits in integer)
+        while (j > -1) {
+            let z = y + pow2[j];
+            let sqZ = Math.multiply(z, z);
+            if (~(sqZ > x) & (sqZ > 0)) {
+                let y = z;
+            }
+            let j = j - 1;
+        }
+        return y;
     }
 
     /** Returns the greater number. */
     function int max(int a, int b) {
+        if (a > b) {
+            return a;
+        } else {
+            return b;
+        }
     }
 
     /** Returns the smaller number. */
     function int min(int a, int b) {
+        if (a < b) {
+            return a;
+        } else {
+            return b;
+        }
     }
 }
