@@ -63,3 +63,39 @@ Memory management
     - Return block
 - Dealloc(addr)
     - Append free block to end of list
+
+## Screen
+
+Draw primitives
+- General idea, not final implementation
+- Handle special cases
+- 
+
+```
+drawPixel(x, y):
+    addr = y * 32 + x / 16
+    bit = x % 16
+    set bit on memory at addr
+
+drawLine(x1, y1, x2, y2):
+    dx = x2 - x1
+    dy = y2 - y1
+    a = 0
+    b = 0
+    diff = 0
+    while (a <= dx and b <= dy)
+        drawPixel(x+a, y+b)
+        if (diff < 0)
+            a += 1
+            diff += dx
+        else
+            b += 1
+            diff -= dy
+
+drawCircle(x, y, r)
+    for dy = 0 to r
+        dx = sqrt(r^2 - dy^2) // check overflow ?
+        drawLine(x - dx, y - dy, x + dx, y - dy)
+        drawLine(x - dx, y + dy, x + dx, y + dy)
+
+```
