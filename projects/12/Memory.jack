@@ -7,7 +7,7 @@
  * This library provides two services: direct access to the computer's main
  * memory (RAM), and allocation and recycling of memory blocks. The Hack RAM
  * consists of 32,768 words, each holding a 16-bit binary number.
- */ 
+ */
 class Memory {
 
     static Array ram;
@@ -37,9 +37,30 @@ class Memory {
     /** Finds an available RAM block of the given size and returns
      *  a reference to its base address. */
     function int alloc(int size) {
-        var Array node, best, block;
+        var Array best, block;
         var int i;
-        do Memory._freeList(65);
+        let best = Memory._bestFit(size);
+        if (best = null) { // first attempt found no free nodes
+            do Memory._compact(); // try compacting blocks to free some space
+            let best = Memory._bestFit(size);
+        }
+        if (best = null) { // no free node found
+            do Sys.error(6);
+            return -1;
+        } else {
+            let block = best + best[1] - size; // allocate block at end of free space
+            let block[0] = null; // next
+            let block[1] = size; // size
+            let best[1] = best[1] - (size + 2); // shrink free space
+            do Memory._printDebug(65);
+            do Output.printInt(block+2);
+            do Output.println();
+            return block + 2; // allocated address start after next and size
+        }
+    }
+
+    function int _bestFit(int size) {
+        var Array best, node;
         let best = null;
         let node = freeList;
         while (~(node = null)) {
@@ -59,50 +80,60 @@ class Memory {
                 let node = node[0]; // advance to next
             }
         }
-        if (best = null) { // no free node found
-            do Sys.error(6);
-            return -1;
-        } else {
-            let block = best + best[1] - (size + 2); // allocate block at end of free space
-            let block[0] = null; // next
-            let block[1] = size; // size
-            let best[1] = best[1] - (size + 2); // shrink free space
-            return block + 2; // allocated address start after next and size
-        }
+        return best;
     }
 
     /** De-allocates the given object (cast as an array) by making
      *  it available for future allocations. */
     function void deAlloc(Array o) {
-        var Array curr;
+        var Array node;
         var boolean break;
         // insert at head of freeList
         if ((o-2) < freeList) {
             let o[-2] = freeList;
             let freeList = o-2;
         } else {
-            let curr = freeList;
-            // find fist node that is after o
+            // find first node that is after o
+            let node = freeList;
             while (~break) {
-                if (curr[0] = null) {
+                if (node[0] = null) {
                     let break = true;
                 } else {
-                    if ((o-2) > curr[0]) {
-                        let curr = curr[0];
+                    if ((o-2) > node[0]) {
+                        let node = node[0];
                     } else {
                         let break = true;
                     }
                 }
             }
-            // insert freed node between curr and next
-            let o[-2] = curr[0];
-            let curr[0] = o-2;
+            // insert freed node between current and next
+            let o[-2] = node[0];
+            let node[0] = o-2;
         }
-        do Memory._freeList(68);
+        do Memory._printDebug(68);
         return;
-    }    
+    }
 
-    function void _freeList(char c) {
+    function void _compact() {
+        var Array node, next;
+        // compact free list by merging contiguous blocks
+        do Memory._printDebug(109);
+        let node = freeList;
+        while (~(node[0] = null)) {
+            let next = node[0];
+            if ((node + node[1] + 2) = next) { // is contiguous
+                // merge blocks
+                let node[1] = node[1] + next[1] + 2; // increase size of current
+                let node[0] = next[0];
+            } else {
+                let node = next; // advance
+            }
+        }
+        do Memory._printDebug(77);
+        return;
+    }
+
+    function void _printDebug(char c) {
         var Array node;
         if (~debug) {
             return;
@@ -124,8 +155,14 @@ class Memory {
         return;
     }
 
-    function void _setDebug() {
+    function void _startDebug() {
         let debug = true;
+        do Memory._printDebug(73);
+        return;
+    }
+
+    function void _stopDebug() {
+        let debug = false;
         return;
     }
 }
