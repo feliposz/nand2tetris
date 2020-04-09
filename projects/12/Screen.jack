@@ -6,38 +6,172 @@
 /**
  * A library of functions for displaying graphics on the screen.
  * The Hack physical screen consists of 512 rows (indexed 0..511, top to bottom)
- * of 256 pixels each (indexed 0..255, left to right). The top left pixel on 
+ * of 256 pixels each (indexed 0..255, left to right). The top left pixel on
  * the screen is indexed (0,0).
  */
 class Screen {
 
+    static boolean color;
+    static Array pow2;
+    static Array screen;
+
     /** Initializes the Screen. */
     function void init() {
+        var int i, p2;
+        let pow2 = Array.new(16);
+        let p2 = 1;
+        while (i < 16) {
+            let pow2[i] = p2;
+            let p2 = p2 + p2;
+            let i = i + 1;
+        }
+        let screen = 16384;
+        let color = true;
+        return;
     }
 
     /** Erases the entire screen. */
     function void clearScreen() {
+        var int i;
+        while (i < 8192) {
+            let screen[i] = 0;
+            let i = i + 1;
+        }
+        return;
     }
 
     /** Sets the current color, to be used for all subsequent drawXXX commands.
      *  Black is represented by true, white by false. */
     function void setColor(boolean b) {
+        let color = b;
+        return;
     }
 
     /** Draws the (x,y) pixel, using the current color. */
     function void drawPixel(int x, int y) {
+        var int addr, bit;
+        let addr = (y * 32) + (x / 16);
+        let bit = x & 15;
+        if (color) {
+            let screen[addr] = screen[addr] | pow2[bit];
+        } else {
+            let screen[addr] = screen[addr] & ~pow2[bit];
+        }
+        return;
     }
 
     /** Draws a line from pixel (x1,y1) to pixel (x2,y2), using the current color. */
     function void drawLine(int x1, int y1, int x2, int y2) {
+        if (x1 = x2) {
+            do Screen._drawVertical(x1, y1, y2);
+        } else {
+            if (y1 = y2) {
+                do Screen._drawHorizontal(x1, x2, y1);
+            } else {
+                do Screen._drawDiagonal(x1, y1, x2, y2);
+            }
+        }
+        return;
+    }
+
+    function void _drawVertical(int x, int y1, int y2) {
+        var int addr, last, bit, tmp;
+        if (y1 > y2) {
+            let tmp = y2; let y2 = y1; let y1 = tmp;
+        }
+        let addr = (y1 * 32) + (x / 16);
+        let last = addr + ((y2 - y1) * 32);
+        let bit = x & 15;
+        if (color) {
+            while (addr < last) {
+                let screen[addr] = screen[addr] | pow2[bit];
+                let addr = addr + 32;
+            }
+        } else {
+            while (addr < last) {
+                let screen[addr] = screen[addr] & ~pow2[bit];
+                let addr = addr + 32;
+            }
+        }
+        return;
+    }
+
+    function void _drawHorizontal(int x1, int x2, int y) {
+        var int addr, last, bit, tmp;
+        if (x1 > x2) {
+            let tmp = x2; let x2 = x1; let x1 = tmp;
+        }
+        let addr = (y * 32) + (x1 / 16);
+        let last = (y * 32) + (x2 / 16);
+        if (addr = last) {
+            if (color) {
+                let screen[addr] = screen[addr] | (~(pow2[x1 & 15]-1) & (pow2[x2 & 15]-1));
+            } else {
+                let screen[addr] = screen[addr] & ((pow2[x1 & 15]-1) | ~(pow2[x2 & 15]-1));
+            }
+            return;
+        }
+        let bit = x1 & 15;
+        if (bit > 0) {
+            if (color) {
+                let screen[addr] = screen[addr] | ~(pow2[bit]-1);
+            } else {
+                let screen[addr] = screen[addr] & (pow2[bit]-1);
+            }
+            let addr = addr + 1;
+        }
+        while (addr < last) {
+            let screen[addr] = color;
+            let addr = addr + 1;
+        }
+        let bit = x2 & 15;
+        if (bit > 0) {
+            if (color) {
+                let screen[last] = screen[last] | (pow2[bit]-1);
+            } else {
+                let screen[last] = screen[last] & ~(pow2[bit]-1);
+            }
+        }
+        return;
+    }
+
+    function void _drawDiagonal(int x1, int y1, int x2, int y2) {
+        var int dx, dy, diff, a, b;
+        let dx = x2 - x1;
+        let dy = y2 - y1;
+        if (dx > 0) { let a = 1; } else { let dx = -dx; let a = -1; }
+        if (dy > 0) { let b = 1; } else { let dy = -dy; let b = -1; }
+        while (~(x1 = x2) & ~(y1 = y2)) {
+            do Screen.drawPixel(x1, y1);
+            if (diff < 0) { let x1 = x1 + a; let diff = diff + dy; }
+            else { let y1 = y1 + b; let diff = diff - dx; }
+        }
+        return;
     }
 
     /** Draws a filled rectangle whose top left corner is (x1, y1)
      * and bottom right corner is (x2,y2), using the current color. */
     function void drawRectangle(int x1, int y1, int x2, int y2) {
+        var int tmp;
+        if (y1 > y2) {
+            let tmp = y2; let y2 = y1; let y1 = tmp;
+        }
+        while (y1 < y2) {
+            do Screen.drawLine(x1, y1, x2, y1);
+            let y1 = y1 + 1;
+        }
+        return;
     }
 
     /** Draws a filled circle of radius r<=181 around (x,y), using the current color. */
     function void drawCircle(int x, int y, int r) {
+        var int dy, dx;
+        while (~(dy > r)) {
+            let dx = Math.sqrt((r*r) - (dy*dy));
+            do Screen.drawLine(x - dx, y - dy, x + dx, y - dy);
+            do Screen.drawLine(x - dx, y + dy, x + dx, y + dy);
+            let dy = dy + 1;
+        }
+        return;
     }
 }
