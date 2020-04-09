@@ -12,53 +12,111 @@
  */
 class String {
 
+    field Array str;
+    field int length;
+
     /** constructs a new empty string with a maximum length of maxLength
      *  and initial length of 0. */
     constructor String new(int maxLength) {
+        if (maxLength > 0) {
+            let str = Array.new(maxLength);
+        }
+        let length = 0;
+        return this;
     }
 
     /** Disposes this string. */
     method void dispose() {
+        if (str) {
+            do Array.dispose(str);
+        }
+        do Memory.deAlloc(this);
+        return;
     }
 
     /** Returns the current length of this string. */
     method int length() {
+        return length;
     }
 
     /** Returns the character at the j-th location of this string. */
     method char charAt(int j) {
+        return str[j];
     }
 
     /** Sets the character at the j-th location of this string to c. */
     method void setCharAt(int j, char c) {
+        let str[j] = c;
+        return;
     }
 
     /** Appends c to this string's end and returns this string. */
     method String appendChar(char c) {
+        let str[length] = c;
+        let length = length + 1;
+        return this;
     }
 
     /** Erases the last character from this string. */
     method void eraseLastChar() {
+        let length = length - 1;
+        return;
     }
 
-    /** Returns the integer value of this string, 
+    /** Returns the integer value of this string,
      *  until a non-digit character is detected. */
     method int intValue() {
+        var int i, value, sign;
+        while ((i < length) & (str[i] = 32)) { // skip spaces
+            let i = i + 1;
+        }
+        if (str[i] = 45) { // minus sign
+            let sign = -1;
+            let i = i + 1;
+        } else {
+            let sign = 1;
+        }
+        while ((i < length) & (str[i] > 47) & (str[i] < 58)) { // convert only digits 0-9
+            let value = (value * 10) + (str[i] - 48);
+            let i = i + 1;
+        }
+        return sign * value;
     }
 
     /** Sets this string to hold a representation of the given value. */
     method void setInt(int val) {
+        let length = 0;
+        if (val < 0) {
+            do appendChar(45);
+            do _int2str(-val);
+        } else {
+            do _int2str(val);
+        }
+        return;
+    }
+
+    method void _int2str(int val) {
+        var int d;
+        if (val > 0) {
+            let d = val - ((val / 10) * 10);
+            do _int2str(val / 10);
+            do appendChar(48 + d);
+        }
+        return;
     }
 
     /** Returns the new line character. */
     function char newLine() {
+        return 128;
     }
 
     /** Returns the backspace character. */
     function char backSpace() {
+        return 129;
     }
 
     /** Returns the double quote (") character. */
     function char doubleQuote() {
+        return 34;
     }
 }
