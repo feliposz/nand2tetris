@@ -1,16 +1,40 @@
 @echo off
 
-rem call ..\..\tools\JackCompiler.bat ArrayTest
-rem call ..\..\tools\JackCompiler.bat KeyboardTest
-rem call ..\..\tools\JackCompiler.bat MathTest
+echo.
+echo Compiling tests
+echo ===============
+call ..\..\tools\JackCompiler.bat ArrayTest
+call ..\..\tools\JackCompiler.bat KeyboardTest
+call ..\..\tools\JackCompiler.bat MathTest
 call ..\..\tools\JackCompiler.bat MemoryTest
-rem call ..\..\tools\JackCompiler.bat OutputTest
-rem call ..\..\tools\JackCompiler.bat ScreenTest
-rem call ..\..\tools\JackCompiler.bat StringTest
-rem call ..\..\tools\JackCompiler.bat SysTest
+call ..\..\tools\JackCompiler.bat OutputTest
+call ..\..\tools\JackCompiler.bat ScreenTest
+call ..\..\tools\JackCompiler.bat StringTest
+call ..\..\tools\JackCompiler.bat SysTest
 
-rem call ..\..\tools\JackCompiler.bat Math.jack
-rem if %errorlevel% equ 0 copy Math.vm MathTest
+echo.
+echo Compiling implementations
+echo =========================
+call ..\..\tools\JackCompiler.bat Math.jack
+if %errorlevel% equ 0 copy Math.vm MathTest
 
 call ..\..\tools\JackCompiler.bat Memory.jack
 if %errorlevel% equ 0 copy Memory.vm MemoryTest
+
+call ..\..\tools\JackCompiler.bat Screen.jack
+if %errorlevel% equ 0 copy Screen.vm ScreenTest
+
+call ..\..\tools\JackCompiler.bat String.jack
+if %errorlevel% equ 0 copy String.vm StringTest
+
+call ..\..\tools\JackCompiler.bat Output.jack
+if %errorlevel% equ 0 copy Output.vm OutputTest
+
+call ..\..\tools\JackCompiler.bat Keyboard.jack
+if %errorlevel% equ 0 copy Keyboard.vm KeyboardTest
+
+call ..\..\tools\JackCompiler.bat Array.jack
+if %errorlevel% equ 0 copy Array.vm ArrayTest
+
+call ..\..\tools\JackCompiler.bat Sys.jack
+if %errorlevel% equ 0 copy Sys.vm SysTest

@@ -97,40 +97,26 @@ class Screen {
     }
 
     function void _drawHorizontal(int x1, int x2, int y) {
-        var int addr, last, bit, tmp;
+        var int addr, tmp;
         if (x1 > x2) {
             let tmp = x2; let x2 = x1; let x1 = tmp;
         }
+        // draw left partial
+        while (~(x1 > x2) & ((x1&15) > 0)) {
+            do Screen.drawPixel(x1, y);
+            let x1 = x1 + 1;
+        }
+        // fast fill 16-bits at a time
         let addr = (y * 32) + (x1 / 16);
-        let last = (y * 32) + (x2 / 16);
-        if (addr = last) {
-            if (color) {
-                let screen[addr] = screen[addr] | (~(pow2[x1 & 15]-1) & (pow2[x2 & 15]-1));
-            } else {
-                let screen[addr] = screen[addr] & ((pow2[x1 & 15]-1) | ~(pow2[x2 & 15]-1));
-            }
-            return;
-        }
-        let bit = x1 & 15;
-        if (bit > 0) {
-            if (color) {
-                let screen[addr] = screen[addr] | ~(pow2[bit]-1);
-            } else {
-                let screen[addr] = screen[addr] & (pow2[bit]-1);
-            }
-            let addr = addr + 1;
-        }
-        while (addr < last) {
+        while ((x2-x1) > 16) { 
             let screen[addr] = color;
             let addr = addr + 1;
+            let x1 = x1 + 16;
         }
-        let bit = x2 & 15;
-        if (bit > 0) {
-            if (color) {
-                let screen[last] = screen[last] | (pow2[bit]-1);
-            } else {
-                let screen[last] = screen[last] & ~(pow2[bit]-1);
-            }
+        // draw right partial
+        while (~(x1 > x2)) {
+            do Screen.drawPixel(x1, y);
+            let x1 = x1 + 1;
         }
         return;
     }

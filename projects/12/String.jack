@@ -28,7 +28,7 @@ class String {
     /** Disposes this string. */
     method void dispose() {
         if (str) {
-            do Array.dispose(str);
+            do str.dispose();
         }
         do Memory.deAlloc(this);
         return;

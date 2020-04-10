@@ -53,8 +53,6 @@ class Memory {
             let block[1] = size; // size
             let best[1] = best[1] - (size + 2); // shrink free space
             do Memory._printDebug(65);
-            do Output.printInt(block+2);
-            do Output.println();
             return block + 2; // allocated address start after next and size
         }
     }
