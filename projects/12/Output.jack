@@ -179,7 +179,7 @@ class Output {
     /** Moves the cursor to the j-th column of the i-th row,
      *  and erases the character displayed there. */
     function void moveCursor(int i, int j) {
-        var int addr, i, value;
+        var int addr, n, value;
         let col = j;
         let row = i;
         if (col < 0) {
@@ -197,7 +197,7 @@ class Output {
             let row = row - 23;
         }
         let addr = (row * 352) + (col / 2);
-        while (i < 11) {
+        while (n < 11) {
             let value = Memory.peek(16384 + addr);
             if ((col & 1) = 1) {
                 let value = (value & 255);
@@ -206,7 +206,7 @@ class Output {
             }
             do Memory.poke(16384 + addr, value);
             let addr = addr + 32;
-            let i = i + 1;
+            let n = n + 1;
         }
         return;
     }
@@ -216,6 +216,10 @@ class Output {
     function void printChar(char c) {
         var int addr, i, value;
         var Array map;
+        if (c = String.backSpace()) {
+            do Output.backSpace();
+            return;
+        }
         let addr = (row * 352) + (col / 2);
         let map = Output.getMap(c);
         while (i < 11) {
