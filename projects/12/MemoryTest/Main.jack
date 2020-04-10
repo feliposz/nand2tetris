@@ -11,8 +11,6 @@ class Main {
         var int temp;
         var Array a, b, c;
 
-        do Memory._startDebug();
-
         do Memory.poke(8000, 333);       // RAM[8000] = 333
         let temp = Memory.peek(8000);
         do Memory.poke(8001, temp + 1);  // RAM[8001] = 334
@@ -74,7 +72,6 @@ class Main {
         do a.dispose();
         do b.dispose();
         do c.dispose();
-
 
         return;
     }

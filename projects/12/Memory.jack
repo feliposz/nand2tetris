@@ -11,15 +11,12 @@
 class Memory {
 
     static Array ram;
-    static Array freeList;
-    static boolean debug;
 
     /** Initializes the class. */
     function void init() {
         let ram = 0;
-        let freeList = 2048;
-        let freeList[0] = null; // next
-        let freeList[1] = 14336; // size
+        let ram[2048] = 14334; // 16384 (total memory) - 2048 (start of heap) - 2 (head of list)
+        let ram[2049] = 2050; // point to start of free memory
         return;
     }
 
@@ -37,130 +34,49 @@ class Memory {
     /** Finds an available RAM block of the given size and returns
      *  a reference to its base address. */
     function int alloc(int size) {
-        var Array best, block;
-        var int i;
-        let best = Memory._bestFit(size);
-        if (best = null) { // first attempt found no free nodes
-            do Memory._compact(); // try compacting blocks to free some space
-            let best = Memory._bestFit(size);
+        var Array node;
+        if (size < 1) {
+            do Sys.error(5); // invalid size request
         }
-        if (best = null) { // no free node found
-            do Sys.error(6);
-            return -1;
-        } else {
-            let block = best + best[1] - size; // allocate block at end of free space
-            let block[0] = null; // next
-            let block[1] = size; // size
-            let best[1] = best[1] - (size + 2); // shrink free space
-            do Memory._printDebug(65);
-            return block + 2; // allocated address start after next and size
+        let node = 2048; // first heap block
+        while (node[0] < size) { // skip smaller blocks
+            let node = node[1]; // advance
         }
-    }
-
-    function int _bestFit(int size) {
-        var Array best, node;
-        let best = null;
-        let node = freeList;
-        while (~(node = null)) {
-            if (node[1] = (size + 2)) { // perfect fit
-                let best = node;
-                let node = null;
+        if ((node + size) > 16379) { // reached end of heap
+            do Sys.error(6); // no free node found
+        }
+        if (node[0] > (size + 2)) { // requested size is less than free space
+            // split block by creating a new free block after it
+            let node[size + 2] = node[0] - size - 2; // size of next free block
+            if (node[1] = (node + 2)) {
+                let node[size + 3] = node + size + 4;
             } else {
-                if (node[1] > (size + 2)) {
-                    if (best = null) { // first found
-                        let best = node;
-                    } else {
-                        if (node[1] < best[1]) { // found a smaller segment
-                            let best = node;
-                        }
-                    }
-                }
-                let node = node[0]; // advance to next
+                let node[size + 3] = node[1]; // update new block next to point to next of block being allocated
             }
+            let node[1] = node + size + 2; // point to new free block
         }
-        return best;
+        let node[0] = 0; // mark block in use (size = 0)
+        return node + 2;
     }
 
     /** De-allocates the given object (cast as an array) by making
      *  it available for future allocations. */
     function void deAlloc(Array o) {
-        var Array node;
-        var boolean break;
-        // insert at head of freeList
-        if ((o-2) < freeList) {
-            let o[-2] = freeList;
-            let freeList = o-2;
-        } else {
-            // find first node that is after o
-            let node = freeList;
-            while (~break) {
-                if (node[0] = null) {
-                    let break = true;
-                } else {
-                    if ((o-2) > node[0]) {
-                        let node = node[0];
-                    } else {
-                        let break = true;
-                    }
-                }
-            }
-            // insert freed node between current and next
-            let o[-2] = node[0];
-            let node[0] = o-2;
-        }
-        do Memory._printDebug(68);
-        return;
-    }
-
-    function void _compact() {
         var Array node, next;
-        // compact free list by merging contiguous blocks
-        do Memory._printDebug(109);
-        let node = freeList;
-        while (~(node[0] = null)) {
-            let next = node[0];
-            if ((node + node[1] + 2) = next) { // is contiguous
-                // merge blocks
-                let node[1] = node[1] + next[1] + 2; // increase size of current
-                let node[0] = next[0];
+        let node = o - 2;
+        let next = node[1];
+        if (next[0] = 0) { // next block is in use
+            let node[0] = node[1] - node - 2; // just restore block size
+        } else { // next block is free
+            // merge blocks
+            let node[0] = node[1] - node + next[0]; // restore size and add to size of next
+            if (next[1] = (next + 2)) {
+                let node[1] = node + 2;
             } else {
-                let node = next; // advance
+                let node[1] = next[1];
             }
         }
-        do Memory._printDebug(77);
         return;
     }
 
-    function void _printDebug(char c) {
-        var Array node;
-        if (~debug) {
-            return;
-        }
-        let node = freeList;
-        do Output.printChar(c);
-        do Output.printChar(58);
-        while (~(node = null)) {
-            do Output.printInt(node);
-            do Output.printChar(40);
-            do Output.printInt(node[1]);
-            do Output.printChar(41);
-            do Output.printChar(45);
-            do Output.printChar(62);
-            let node = node[0];
-        }
-        do Output.printChar(88);
-        do Output.println();
-        return;
-    }
-
-    function void _startDebug() {
-        let debug = true;
-        do Memory._printDebug(73);
-        return;
-    }
-
-    function void _stopDebug() {
-        let debug = false;
-        return;
-    }
 }
