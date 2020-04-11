@@ -43,7 +43,7 @@ const vmlib = {
             vmlib.currentLine = i + 1;
             if (line.length > 0) {
                 const parsed = vmlib.parseCommand(line, vmlib.currentLine);
-                const parsedNext = i < lines.length ? vmlib.parseCommand(lines[i+1], vmlib.currentLine+1) : {cmd: ''};
+                const parsedNext = i < lines.length-1 ? vmlib.parseCommand(lines[i+1], vmlib.currentLine+1) : {cmd: ''};
 
                 if (parsed.cmd =='push' && parsedNext.cmd == 'pop') {
                     out.push('// '+ line + ' and ' + lines[i+1] + ' inplace');

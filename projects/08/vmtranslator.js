@@ -47,5 +47,5 @@ try {
     fs.writeFileSync(writefile, out.join('\n'));
 
 } catch (err) {
-    console.error(err.message);
+    console.error('At line ' + vmlib.currentLine + ': ' + err.message);
 }
