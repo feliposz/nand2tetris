@@ -15,6 +15,9 @@ class Array {
 
     /** Constructs a new Array of the given size. */
     function Array new(int size) {
+        if (size < 1) {
+            do Sys.error(2); // invalid array size
+        }
         return Memory.alloc(size);
     }
 

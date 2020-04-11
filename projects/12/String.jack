@@ -13,21 +13,25 @@
 class String {
 
     field Array str;
-    field int length;
+    field int length, maxLen;
 
     /** constructs a new empty string with a maximum length of maxLength
      *  and initial length of 0. */
     constructor String new(int maxLength) {
+        if (maxLength < 0) {
+            do Sys.error(14); // invalid string size
+        }
         if (maxLength > 0) {
             let str = Array.new(maxLength);
         }
         let length = 0;
+        let maxLen = maxLength;
         return this;
     }
 
     /** Disposes this string. */
     method void dispose() {
-        if (str) {
+        if (str > 0) {
             do str.dispose();
         }
         do Memory.deAlloc(this);
@@ -41,17 +45,26 @@ class String {
 
     /** Returns the character at the j-th location of this string. */
     method char charAt(int j) {
+        if ((j < 0) | ~(j < length)) {
+            do Sys.error(15); // invalid position
+        }
         return str[j];
     }
 
     /** Sets the character at the j-th location of this string to c. */
     method void setCharAt(int j, char c) {
+        if ((j < 0) | ~(j < length)) {
+            do Sys.error(16); // invalid position
+        }
         let str[j] = c;
         return;
     }
 
     /** Appends c to this string's end and returns this string. */
     method String appendChar(char c) {
+        if (length = maxLen) {
+            do Sys.error(17); // max length reached
+        }
         let str[length] = c;
         let length = length + 1;
         return this;
@@ -59,6 +72,9 @@ class String {
 
     /** Erases the last character from this string. */
     method void eraseLastChar() {
+        if (length = 0) {
+            do Sys.error(18); // string empty
+        }
         let length = length - 1;
         return;
     }
@@ -67,6 +83,9 @@ class String {
      *  until a non-digit character is detected. */
     method int intValue() {
         var int i, value, sign;
+        if (str = 0) {
+            do Sys.error(19); // invalid target string
+        }
         while ((i < length) & (str[i] = 32)) { // skip spaces
             let i = i + 1;
         }

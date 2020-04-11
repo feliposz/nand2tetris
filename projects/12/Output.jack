@@ -19,10 +19,12 @@ class Output {
     // Character map for displaying characters
     static Array charMaps; 
     static int row, col;
+    static String tmp;
 
     /** Initializes the screen, and locates the cursor at the screen's top-left. */
     function void init() {
         do Output.initMap();
+        let tmp = String.new(6);
         return;
     }
 
@@ -252,11 +254,8 @@ class Output {
     /** Displays the given integer starting at the cursor location,
      *  and advances the cursor appropriately. */
     function void printInt(int i) {
-        var String s;
-        let s = String.new(6);
-        do s.setInt(i);
-        do Output.printString(s);
-        do s.dispose();
+        do tmp.setInt(i);
+        do Output.printString(tmp);
         return;
     }
 

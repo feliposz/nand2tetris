@@ -34,8 +34,8 @@ class Math {
         }
     }
 
-    /** Returns the product of x and y. 
-     *  When a Jack compiler detects the multiplication operator '*' in the 
+    /** Returns the product of x and y.
+     *  When a Jack compiler detects the multiplication operator '*' in the
      *  program's code, it handles it by invoking this method. In other words,
      *  the Jack expressions x*y and multiply(x,y) return the same value.
      */
@@ -55,12 +55,15 @@ class Math {
     }
 
     /** Returns the integer part of x/y.
-     *  When a Jack compiler detects the multiplication operator '/' in the 
+     *  When a Jack compiler detects the multiplication operator '/' in the
      *  program's code, it handles it by invoking this method. In other words,
      *  the Jack expressions x/y and divide(x,y) return the same value.
      */
     function int divide(int x, int y) {
         var int q, q2, y2;
+        if (y = 0) {
+            do Sys.error(3); // Division by zero
+        }
         if (x < 0) {
             return -Math.divide(-x, y);
         }
@@ -87,6 +90,9 @@ class Math {
     /** Returns the integer part of the square root of x. */
     function int sqrt(int x) {
         var int y, j, z, sqZ;
+        if (x < 0) {
+            do Sys.error(4); // Square root of negative number
+        }
         let j = 7; // N / 2 - 1, where N = 16 (bits in integer)
         while (j > -1) {
             let z = y + pow2[j];
@@ -102,18 +108,16 @@ class Math {
     /** Returns the greater number. */
     function int max(int a, int b) {
         if (a > b) {
-            return a;
-        } else {
-            return b;
+            let b = a;
         }
+        return b;
     }
 
     /** Returns the smaller number. */
     function int min(int a, int b) {
         if (a < b) {
-            return a;
-        } else {
-            return b;
+            let b = a;
         }
+        return b;
     }
 }

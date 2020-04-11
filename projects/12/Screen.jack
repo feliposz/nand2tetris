@@ -50,6 +50,9 @@ class Screen {
     /** Draws the (x,y) pixel, using the current color. */
     function void drawPixel(int x, int y) {
         var int addr, bit;
+        if ((x < 0) | (x > 511) | (y < 0) | (y > 255)) {
+            do Sys.error(7); // invalid screen coordinates
+        }
         let addr = (y * 32) + (x / 16);
         let bit = x & 15;
         if (color) {

@@ -29,8 +29,11 @@ class Sys {
     /** Waits approximately duration milliseconds and returns.  */
     function void wait(int duration) {
         var int countDown;
+        if (duration < 0) {
+            do Sys.error(1); // invalid duration
+        }
         while (duration > 0) {
-            let countDown = 100;
+            let countDown = 50;
             while (countDown > 0) {
                 let countDown = countDown - 1;
             }
