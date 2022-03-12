@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -9,26 +10,35 @@
         * {
             font-family: sans-serif;
         }
+
         textarea {
             font-family: monospace;
         }
+
         .box {
             display: inline-block;
+            vertical-align: top;
         }
     </style>
 </head>
+
 <body>
-    
+
     <h1>Hack Machine Language</h1>
 
-    <p>A simple machine language assembler/disassembler for the Hack computer from <a href="https://www.nand2tetris.org/">nand2tetris</a>.</p>
+    <p>A simple machine language assembler/disassembler for the Hack computer from <a
+            href="https://www.nand2tetris.org/">nand2tetris</a>.</p>
 
     <h2>Assembler</h2>
 
     <div class="box">
         <label for="txtAsmSrc">Program (hack assembly)</label>
         <br>
-        <textarea id="txtAsmSrc" cols=25 rows=15></textarea>
+        <textarea id="txtAsmSrc" cols="40" rows="20"></textarea>
+        <br>
+        <select id="selectSampleAsm">
+            <option value="">-- Select Sample --</option>
+        </select>
         <br>
         <input type='file' id="filePickerAsm" accept=".asm">
     </div>
@@ -36,9 +46,10 @@
     <div class="box">
         <label for="txtBinDst">Binary (hack machine code)</label>
         <br>
-        <textarea id="txtBinDst" cols=25 rows=15></textarea>
+        <textarea id="txtBinDst" cols="40" rows="20"></textarea>
         <br>
         <button id="btnAsm">Assemble</button>
+        <button id="btnCopyToBin">Copy to Disassembler</button>
     </div>
 
     <h2>Disassembler</h2>
@@ -46,7 +57,11 @@
     <div class="box">
         <label for="txtBinSrc">Binary (machine language)</label>
         <br>
-        <textarea id="txtBinSrc" cols=25 rows=15></textarea>
+        <textarea id="txtBinSrc" cols="40" rows="20"></textarea>
+        <br>
+        <select id="selectsampleBin">
+            <option value="">-- Select Sample --</option>
+        </select>
         <br>
         <input type='file' id="filePickerHack" accept=".hack">
     </div>
@@ -54,38 +69,153 @@
     <div class="box">
         <label for="txtAsmDst">Program (disassembled code)</label>
         <br>
-        <textarea id="txtAsmDst" cols=25 rows=15></textarea>
+        <textarea id="txtAsmDst" cols="40" rows="20"></textarea>
         <br>
         <button id="btnDisasm">Disassemble</button>
+        <button id="btnCopyToAsm">Copy to Assembler</button>
     </div>
 
     <script>
-        window.onload = function(){
-            document.getElementById('btnDisasm').addEventListener('click', function () {
-                document.getElementById('txtAsmDst').value = hacklib.disasm(document.getElementById('txtBinSrc').value);
+        window.onload = function () {
+
+            // Sample paths
+            const sampleAsm = [
+                'notes/extra/add2.asm',
+                'notes/extra/array_fill.asm',
+                'notes/extra/ball.asm',
+                'notes/extra/ball_kbd_control.asm',
+                'notes/extra/ball_move.asm',
+                'notes/extra/bit_shift_left.asm',
+                'notes/extra/Fill_simple.asm',
+                'notes/extra/mult_neg.asm',
+                'notes/extra/mult_shift.asm',
+                'notes/extra/rectangle.asm',
+                'notes/extra/signum.asm',
+                'notes/extra/sum.asm',
+                'notes/extra/sum2.asm',
+                'notes/extra/swap.asm',
+                'projects/04/fill/Fill.asm',
+                'projects/04/mult/mult.asm',
+                'projects/06/add/Add.asm',
+                'projects/06/max/Max.asm',
+                'projects/06/max/MaxL.asm',
+                'projects/06/pong/Pong.asm',
+                'projects/06/pong/PongL.asm',
+                'projects/06/pong/Pong_dis.asm',
+                'projects/06/rect/Rect.asm',
+                'projects/06/rect/RectL.asm',
+                'projects/07/MemoryAccess/BasicTest/BasicTest.asm',
+                'projects/07/MemoryAccess/PointerTest/PointerTest.asm',
+                'projects/07/MemoryAccess/StaticTest/StaticTest.asm',
+                'projects/07/StackArithmetic/SimpleAdd/SimpleAdd.asm',
+                'projects/07/StackArithmetic/StackTest/StackTest.asm',
+                'projects/08/FunctionCalls/FibonacciElement/FibonacciElement.asm',
+                'projects/08/FunctionCalls/NestedCall/NestedCall.asm',
+                'projects/08/FunctionCalls/SimpleFunction/SimpleFunction.asm',
+                'projects/08/FunctionCalls/StaticsTest/StaticsTest.asm',
+                'projects/08/ProgramFlow/BasicLoop/BasicLoop.asm',
+                'projects/08/ProgramFlow/FibonacciSeries/FibonacciSeries.asm'
+            ];
+
+            const sampleBin = [
+                'projects/04/fill/Fill.hack',
+                'projects/04/mult/mult.hack',
+                'projects/05/Add.hack',
+                'projects/05/Max.hack',
+                'projects/05/Rect.hack',
+                'projects/06/add/Add.hack',
+                'projects/06/add/Add_hand.hack',
+                'projects/06/max/Max.hack',
+                'projects/06/max/MaxL_hand.hack',
+                'projects/06/pong/Pong.hack',
+                'projects/06/rect/Rect.hack',
+                'projects/06/rect/RectL_hand.hack'
+            ];
+
+            // DOM elements
+            const selectSampleAsm = document.getElementById('selectSampleAsm');
+            const selectsampleBin = document.getElementById('selectsampleBin');
+            const btnAsm = document.getElementById('btnAsm');
+            const btnCopyToAsm = document.getElementById('btnCopyToAsm');
+            const btnCopyToBin = document.getElementById('btnCopyToBin');
+            const btnDisasm = document.getElementById('btnDisasm');
+            const filePickerAsm = document.getElementById('filePickerAsm');
+            const filePickerHack = document.getElementById('filePickerHack');
+            const txtAsmDst = document.getElementById('txtAsmDst');
+            const txtAsmSrc = document.getElementById('txtAsmSrc');
+            const txtBinDst = document.getElementById('txtBinDst');
+            const txtBinSrc = document.getElementById('txtBinSrc');
+
+            // Event listeners
+            btnCopyToAsm.addEventListener('click', function () {
+                txtAsmSrc.value = txtAsmDst.value;
             });
-            document.getElementById('filePickerHack').addEventListener('change', function (evt) {
-                if(evt.target.files.length > 0) {
+
+            btnCopyToBin.addEventListener('click', function () {
+                txtBinSrc.value = txtBinDst.value;
+            });
+
+            btnDisasm.addEventListener('click', function () {
+                txtAsmDst.value = hacklib.disasm(txtBinSrc.value);
+            });
+
+            filePickerHack.addEventListener('change', function (evt) {
+                if (evt.target.files.length > 0) {
                     var fr = new FileReader();
                     fr.onload = function (evt) {
-                        document.getElementById('txtBinSrc').value = evt.target.result;
+                        txtBinSrc.value = evt.target.result;
                     };
                     fr.readAsText(evt.target.files[0]);
                 }
             });
-            document.getElementById('btnAsm').addEventListener('click', function () {
-                document.getElementById('txtBinDst').value = hacklib.asm(document.getElementById('txtAsmSrc').value);
+
+            btnAsm.addEventListener('click', function () {
+                txtBinDst.value = hacklib.asm(txtAsmSrc.value);
             });
-            document.getElementById('filePickerAsm').addEventListener('change', function (evt) {
-                if(evt.target.files.length > 0) {
+
+            filePickerAsm.addEventListener('change', function (evt) {
+                if (evt.target.files.length > 0) {
                     var fr = new FileReader();
                     fr.onload = function (evt) {
-                        document.getElementById('txtAsmSrc').value = evt.target.result;
+                        txtAsmSrc.value = evt.target.result;
                     };
                     fr.readAsText(evt.target.files[0]);
                 }
             });
+
+            selectSampleAsm.addEventListener('change', function (evt) {
+                if (evt.target.value) {
+                    fetch(evt.target.value)
+                        .then(response => response.text())
+                        .then(data => txtAsmSrc.value = data);
+                }
+            });
+
+            selectsampleBin.addEventListener('change', function (evt) {
+                if (evt.target.value) {
+                    fetch(evt.target.value)
+                        .then(response => response.text())
+                        .then(data => txtBinSrc.value = data);
+                }
+            });
+
+            // Build select options
+
+            for (let i = 0; i < sampleAsm.length; i++) {
+                const opt = document.createElement('option');
+                opt.value = sampleAsm[i];
+                opt.text = sampleAsm[i].split('/').slice(-1)[0];
+                selectSampleAsm.add(opt);
+            }
+
+            for (let i = 0; i < sampleBin.length; i++) {
+                const opt = document.createElement('option');
+                opt.value = sampleBin[i];
+                opt.text = sampleBin[i].split('/').slice(-1)[0];
+                selectsampleBin.add(opt);
+            }
         };
     </script>
 </body>
+
 </html>
