@@ -1,0 +1,34 @@
+Sys.wait
+    ERR 1 neg duration
+Array.new
+    ERR 2 array size zero
+Math.divide
+    ERR 3 div by zero
+Math.sqrt
+    ERR 4 sqrt negative
+Memory.alloc
+    ERR 5 alloc size zero
+    ERR 6 out of memory
+Screen.drawPixel
+    ERR 7 invalid coordinates
+Screen.drawLine
+    ERR 8 invalid coordinates
+Screen.drawRectangle
+    ERR 9 invalid coordinates
+Screen.drawCircle
+    ERR 12 invalid center coordinates
+    ERR 13 invalid radius
+String.new
+    ERR 14 invalid size (negative)
+String.charAt
+    ERR 15 invalid position
+String.setCharAt
+    ERR 16 invalid position
+String.appendChar
+    ERR 17 string buffer overflow
+String.eraseLastChar
+    ERR 18 string buffer underflow
+String.setInt
+    ERR 19 invalid string size (zero)
+Output.moveCursor
+    ERR 20 invalid row/col
